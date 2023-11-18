@@ -1,4 +1,4 @@
-use crate::utilities;
+use crate::{utilities, AppState};
 use axum::{
     extract::State,
     http::{Request, StatusCode},
@@ -63,7 +63,7 @@ pub async fn validate_cookie(cookie_value: String, pool: SqlitePool) -> bool {
 
 // Middleware to check the auth_token cookie
 pub async fn auth<B>(
-    State(state): State<SqlitePool>,
+    State(state): State<AppState>,
     TypedHeader(cookie): TypedHeader<Cookie>,
     request: Request<B>,
     next: Next<B>,
@@ -72,7 +72,7 @@ pub async fn auth<B>(
         Some(value) => value,
         None => "",
     };
-    if validate_cookie(auth_cookie.to_string(), state.clone()).await {
+    if validate_cookie(auth_cookie.to_string(), state.connection_pool.clone()).await {
         let response = next.run(request).await;
         Ok(response)
     } else {

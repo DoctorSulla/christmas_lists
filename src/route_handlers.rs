@@ -1,4 +1,4 @@
-use crate::{auth_and_login,utilities};
+use crate::{auth_and_login, utilities, AppState};
 use axum::{
     body::{Bytes, Full},
     extract::{Form, Path, Query, State},
@@ -6,7 +6,6 @@ use axum::{
     response::{Html, Response},
 };
 use serde::{Deserialize, Serialize};
-use sqlx::SqlitePool;
 use std::fs;
 
 #[derive(Serialize, Deserialize)]
@@ -58,7 +57,7 @@ pub async fn load_file(Path(file_name): Path<String>) -> Response<Full<Bytes>> {
 }
 
 pub async fn process_login(
-    State(state): State<SqlitePool>,
+    State(state): State<AppState>,
     form_data: Form<auth_and_login::LoginRequest>,
 ) -> (HeaderMap, Html<String>) {
     let mut headers = HeaderMap::new();
@@ -66,7 +65,7 @@ pub async fn process_login(
     if auth_and_login::verify_login(
         form_data.username.as_str(),
         form_data.password.as_str(),
-        state.clone(),
+        state.connection_pool.clone(),
     )
     .await
     {
@@ -82,7 +81,7 @@ pub async fn process_login(
             .bind(1)
             .bind(expiry)
             .bind(false)
-            .execute(&state)
+            .execute(&state.connection_pool)
             .await
             .expect("Failed to create access token");
 
@@ -101,25 +100,21 @@ pub async fn process_login(
     (headers, Html(response_html))
 }
 
-pub async fn register(
-    State(state): State<SqlitePool>,
-    Form(form_data): Form<RegistrationRequest>,
-)  {
+pub async fn register(State(state): State<AppState>, Form(form_data): Form<RegistrationRequest>) {
     sqlx::query("INSERT INTO users(username,hashed_password) values(?,?)")
         .bind(form_data.username)
         .bind(auth_and_login::hash_password(form_data.password))
-        .execute(&state).await.expect("Failed to create registration");
+        .execute(&state.connection_pool)
+        .await
+        .expect("Failed to create registration");
 }
 
-pub async fn add_item(
-    State(state): State<SqlitePool>,
-    Form(form_data): Form<Item>,
-) -> Html<String> {
+pub async fn add_item(State(state): State<AppState>, Form(form_data): Form<Item>) -> Html<String> {
     sqlx::query("INSERT INTO lists (user_id,name,url,price,taken) values(1234,?,?,?,false)")
         .bind(&form_data.name)
         .bind(&form_data.url)
         .bind(utilities::format_currency(form_data.price))
-        .execute(&state)
+        .execute(&state.connection_pool)
         .await
         .expect("Failed to add item to list.");
 

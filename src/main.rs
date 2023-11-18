@@ -3,11 +3,26 @@ use axum::{
     routing::{delete, get, post},
     Router,
 };
-use sqlx::sqlite::{SqliteConnectOptions, SqlitePoolOptions};
+use sqlx::{
+    sqlite::{SqliteConnectOptions, SqlitePoolOptions},
+    SqlitePool,
+};
 
 pub mod auth_and_login;
 pub mod route_handlers;
 pub mod utilities;
+
+#[derive(Clone)]
+pub struct AppState {
+    connection_pool: SqlitePool,
+    user: User,
+}
+
+#[derive(Clone)]
+pub struct User {
+    user_id: i16,
+    username: String,
+}
 
 #[tokio::main]
 async fn main() {
@@ -23,6 +38,13 @@ async fn main() {
         .await
         .expect("Failed to create connection pool");
 
+    let app_state: AppState = AppState {
+        connection_pool: pool,
+        user: User {
+            user_id: 0,
+            username: String::new(),
+        },
+    };
     // Create tables
 
     sqlx::query(
@@ -33,7 +55,7 @@ async fn main() {
             expiry INTEGER,
             revoked BOOLEAN)",
     )
-    .execute(&pool)
+    .execute(&app_state.connection_pool)
     .await
     .expect("Failed to create table");
 
@@ -44,7 +66,7 @@ async fn main() {
             hashed_password VARCHAR(200))
         ",
     )
-    .execute(&pool)
+    .execute(&app_state.connection_pool)
     .await
     .expect("Failed to create table");
 
@@ -60,7 +82,7 @@ async fn main() {
 )
         ",
     )
-    .execute(&pool)
+    .execute(&app_state.connection_pool)
     .await
     .expect("Failed to create table");
 
@@ -68,7 +90,7 @@ async fn main() {
         .route("/item", post(route_handlers::add_item))
         .route("/item", delete(route_handlers::delete_item))
         .route_layer(middleware::from_fn_with_state(
-            pool.clone(),
+            app_state.clone(),
             auth_and_login::auth,
         ));
 
@@ -77,11 +99,10 @@ async fn main() {
         .route("/login", post(route_handlers::process_login))
         .route("/register", post(route_handlers::register));
 
-
     let app = Router::new()
         .merge(protected_routes)
         .merge(open_routes)
-        .with_state(pool);
+        .with_state(app_state);
 
     axum::Server::bind(&"0.0.0.0:3000".parse().unwrap())
         .serve(app.into_make_service())
