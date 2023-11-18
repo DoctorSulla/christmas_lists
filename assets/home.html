@@ -1,0 +1,43 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Halliday Christmas Lists</title>
+    <style>
+      form {
+        width: fit-content;
+      }
+      .form-input {
+        display: flex;
+        justify-content: space-between;
+        margin: 10px 0;
+      }
+      .form-input > label {
+        margin-right: 10px;
+      }
+    </style>
+    <script
+      src="https://unpkg.com/htmx.org@1.9.8"
+      integrity="sha384-rgjA7mptc2ETQqXoYC3/zJvkU7K/aP44Y+z7xQuJiVnB/422P/Ak+F/AqFR7E4Wr"
+      crossorigin="anonymous"
+    ></script>
+  </head>
+  <body>
+    <h1>Your list</h1>
+    <table id="list-table">
+      <thead>
+        <tr>
+          <th>Item Name</th>
+          <th>Item URL</th>
+          <th>Item Price</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+    <form hx-post="../item" hx-target="#list-table thead" hx-swap="beforeend">
+      <input type="text" name="name" placeholder="Name" />
+      <input type="url" name="url" placeholder="URL" />
+      <input type="number" name="price" placeholder="Price" step=".01" value="00.00" />
+      <button type="submit">Add Item</button>
+    </form>
+  </body>
+</html>
