@@ -7,6 +7,8 @@ use sqlx::{
     sqlite::{SqliteConnectOptions, SqlitePoolOptions},
     SqlitePool,
 };
+use std::sync::Arc;
+use tokio::sync::Mutex;
 
 pub mod auth_and_login;
 pub mod route_handlers;
@@ -15,10 +17,10 @@ pub mod utilities;
 #[derive(Clone)]
 pub struct AppState {
     connection_pool: SqlitePool,
-    user: User,
+    user: Arc<Mutex<User>>,
 }
 
-#[derive(Clone)]
+#[derive(Clone,sqlx::FromRow)]
 pub struct User {
     user_id: i16,
     username: String,
@@ -28,7 +30,7 @@ pub struct User {
 async fn main() {
     // Set connection options
     let connection_options = SqliteConnectOptions::new()
-        .filename("test.db")
+        .filename("christmas_lists.db")
         .create_if_missing(true);
 
     // Create pool
@@ -40,10 +42,10 @@ async fn main() {
 
     let app_state: AppState = AppState {
         connection_pool: pool,
-        user: User {
+        user: Arc::new(Mutex::new(User {
             user_id: 0,
             username: String::new(),
-        },
+        }))
     };
     // Create tables
 

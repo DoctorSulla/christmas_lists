@@ -1,4 +1,4 @@
-use crate::{utilities, AppState};
+use crate::{utilities, AppState,User};
 use axum::{
     extract::State,
     http::{Request, StatusCode},
@@ -73,6 +73,9 @@ pub async fn auth<B>(
         None => "",
     };
     if validate_cookie(auth_cookie.to_string(), state.connection_pool.clone()).await {
+        let mut data = state.user.lock().await;
+        data.username = "Terry".to_string();
+        data.user_id = 1234;
         let response = next.run(request).await;
         Ok(response)
     } else {
@@ -102,4 +105,11 @@ pub fn hash_password(password: String) -> String {
         .unwrap()
         .to_string();
     password_hash
+}
+
+pub async fn get_user(pool: SqlitePool,user_id: i32) -> Option<User> {
+    match sqlx::query_as::<_,User>("SELECT * FROM users WHERE id=?").bind(user_id).fetch_one(&pool).await {
+        Ok(value) => Some(value),
+        Err(_e) => None    
+    }
 }
