@@ -113,7 +113,9 @@ pub async fn register(State(state): State<AppState>, Form(form_data): Form<Regis
 }
 
 pub async fn add_item(State(state): State<AppState>, Form(form_data): Form<Item>) -> Html<String> {
-    sqlx::query("INSERT INTO lists (user_id,name,url,price,taken) values(1234,?,?,?,false)")
+    let data = state.user.lock().await;
+    sqlx::query("INSERT INTO lists (user_id,name,url,price,taken) values(?,?,?,?,false)")
+        .bind(data.id)
         .bind(&form_data.name)
         .bind(&form_data.url)
         .bind(utilities::format_currency(form_data.price))
@@ -129,6 +131,19 @@ pub async fn add_item(State(state): State<AppState>, Form(form_data): Form<Item>
     ))
 }
 
-pub async fn delete_item(delete_request: Query<DeleteRequest>) {
+pub async fn delete_item(delete_request: Query<DeleteRequest>) -> Html<String> {
     println!("Trying to remove item {}", delete_request.id);
+    Html("test".to_string())
+}
+
+pub async fn get_items() {
+    println!("Trying to get items");
+}
+
+pub async fn get_users() {
+    println!("Getting list of users");
+}
+
+pub async fn allocate_item() {
+    println!("Trying to allocate item");
 }

@@ -1,6 +1,6 @@
 use axum::{
     middleware,
-    routing::{delete, get, post},
+    routing::{delete, get, post, patch},
     Router,
 };
 use sqlx::{
@@ -54,6 +54,9 @@ async fn main() {
     let protected_routes = Router::new()
         .route("/item", post(route_handlers::add_item))
         .route("/item", delete(route_handlers::delete_item))
+        .route("/item", patch(route_handlers::allocate_item))
+        .route("/items", get(route_handlers::get_items))
+        .route("/users", get(route_handlers::get_users))
         .route_layer(middleware::from_fn_with_state(
             app_state.clone(),
             auth_and_login::auth,

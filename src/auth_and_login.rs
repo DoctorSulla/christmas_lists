@@ -57,10 +57,11 @@ pub async fn verify_login(username: &str, password: &str, pool: SqlitePool) -> O
 
 // Confirm the cookie is valid and return a the user if so
 pub async fn validate_cookie(cookie_value: String, pool: SqlitePool) -> Option<User> {
+
     let current_time: i64 = utilities::get_epoch_time();
 
     let query = match sqlx::query(
-        "SELECT * FROM auth_tokens WHERE token =? AND expiry < ? and revoked=false",
+        "SELECT * FROM auth_tokens WHERE token =? AND expiry > ? and revoked=false",
     )
     .bind(cookie_value)
     .bind(current_time)
@@ -88,6 +89,7 @@ pub async fn auth<B>(
             let mut data = state.user.lock().await;
             data.username = value.username;
             data.id = value.id;
+            std::mem::drop(data);
             let response = next.run(request).await;
             Ok(response)
         }
