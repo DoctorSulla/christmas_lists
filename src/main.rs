@@ -12,6 +12,7 @@ use tokio::sync::Mutex;
 
 pub mod auth_and_login;
 pub mod route_handlers;
+pub mod tables;
 pub mod utilities;
 
 #[derive(Clone)]
@@ -20,9 +21,9 @@ pub struct AppState {
     user: Arc<Mutex<User>>,
 }
 
-#[derive(Clone,sqlx::FromRow)]
+#[derive(Clone, sqlx::FromRow, Debug)]
 pub struct User {
-    user_id: i16,
+    id: i16,
     username: String,
 }
 
@@ -40,53 +41,15 @@ async fn main() {
         .await
         .expect("Failed to create connection pool");
 
+    tables::create(pool.clone()).await;
+
     let app_state: AppState = AppState {
         connection_pool: pool,
         user: Arc::new(Mutex::new(User {
-            user_id: 0,
+            id: 0,
             username: String::new(),
-        }))
+        })),
     };
-    // Create tables
-
-    sqlx::query(
-        "CREATE TABLE IF NOT EXISTS auth_tokens (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            token VARCHAR(30),
-            user_id INTEGER,
-            expiry INTEGER,
-            revoked BOOLEAN)",
-    )
-    .execute(&app_state.connection_pool)
-    .await
-    .expect("Failed to create table");
-
-    sqlx::query(
-        "CREATE TABLE IF NOT EXISTS users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT, 
-            username VARCHAR(30) UNIQUE, 
-            hashed_password VARCHAR(200))
-        ",
-    )
-    .execute(&app_state.connection_pool)
-    .await
-    .expect("Failed to create table");
-
-    sqlx::query(
-        "CREATE TABLE IF NOT EXISTS lists(
-            id INTEGER PRIMARY KEY AUTOINCREMENT, 
-            user_id INTEGER,
-            name VARCHAR(50),
-            url VARCHAR(300), 
-            price VARCHAR (30),
-            taken BOOLEAN,
-            taken_by_id INTEGER
-)
-        ",
-    )
-    .execute(&app_state.connection_pool)
-    .await
-    .expect("Failed to create table");
 
     let protected_routes = Router::new()
         .route("/item", post(route_handlers::add_item))

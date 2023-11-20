@@ -62,40 +62,43 @@ pub async fn process_login(
 ) -> (HeaderMap, Html<String>) {
     let mut headers = HeaderMap::new();
     let response_html;
-    if auth_and_login::verify_login(
+    match auth_and_login::verify_login(
         form_data.username.as_str(),
         form_data.password.as_str(),
         state.connection_pool.clone(),
     )
     .await
     {
-        response_html = "".to_string();
+        Some(_value) => {
+            response_html = "".to_string();
 
-        let token = auth_and_login::generate_token();
-        let cookie_duration_in_seconds: i64 = 3600000;
-        let current_time: i64 = utilities::get_epoch_time();
-        let expiry: i64 = current_time + cookie_duration_in_seconds;
+            let token = auth_and_login::generate_token();
+            let cookie_duration_in_seconds: i64 = 3600000;
+            let current_time: i64 = utilities::get_epoch_time();
+            let expiry: i64 = current_time + cookie_duration_in_seconds;
 
-        sqlx::query("INSERT INTO auth_tokens (token,user_id,expiry,revoked) values(?,?,?,?)")
-            .bind(&token)
-            .bind(1)
-            .bind(expiry)
-            .bind(false)
-            .execute(&state.connection_pool)
-            .await
-            .expect("Failed to create access token");
+            sqlx::query("INSERT INTO auth_tokens (token,user_id,expiry,revoked) values(?,?,?,?)")
+                .bind(&token)
+                .bind(1)
+                .bind(expiry)
+                .bind(false)
+                .execute(&state.connection_pool)
+                .await
+                .expect("Failed to create access token");
 
-        headers.insert(
-            "Set-Cookie",
-            format!("auth_token={}; Max-Age={}; HttpOnly", &token, expiry)
-                .parse()
-                .unwrap(),
-        );
-        headers.insert("HX-Location", "./home.html".parse().unwrap());
-    } else {
-        response_html = "Invalid username or password".to_string();
+            headers.insert(
+                "Set-Cookie",
+                format!("auth_token={}; Max-Age={}; HttpOnly", &token, expiry)
+                    .parse()
+                    .unwrap(),
+            );
+            headers.insert("HX-Location", "./home.html".parse().unwrap());
+        }
+        None => {
+            response_html = "Invalid username or password".to_string();
 
-        headers.insert("HX-Retarget", "#login-response".parse().unwrap());
+            headers.insert("HX-Retarget", "#login-response".parse().unwrap());
+        }
     }
     (headers, Html(response_html))
 }
