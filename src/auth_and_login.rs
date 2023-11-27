@@ -2,8 +2,6 @@ use crate::{utilities, AppState, User};
 use axum::{
     extract::State,
     http::{Request, StatusCode},
-    middleware::Next,
-    response::Response,
     TypedHeader,
 };
 use headers::Cookie;
@@ -29,14 +27,14 @@ pub async fn verify_login(username: &str, password: &str, pool: SqlitePool) -> O
     let query = match sqlx::query("SELECT id,hashed_password FROM users WHERE username=?")
         .bind(username)
         .fetch_optional(&pool)
-        .await {
-            Ok(result) => match result {
-                Some(row) => row,
-                None => return None
-            },
-            Err(_e) => return None    
-
-        };
+        .await
+    {
+        Ok(result) => match result {
+            Some(row) => row,
+            None => return None,
+        },
+        Err(_e) => return None,
+    };
 
     let hashed_password = query.try_get("hashed_password").unwrap();
     let user_id: i32 = query.try_get("id").unwrap();
@@ -57,7 +55,6 @@ pub async fn verify_login(username: &str, password: &str, pool: SqlitePool) -> O
 
 // Confirm the cookie is valid and return a the user if so
 pub async fn validate_cookie(cookie_value: String, pool: SqlitePool) -> Option<User> {
-
     let current_time: i64 = utilities::get_epoch_time();
 
     let query = match sqlx::query(
@@ -80,18 +77,16 @@ pub async fn validate_cookie(cookie_value: String, pool: SqlitePool) -> Option<U
 pub async fn auth<B>(
     State(state): State<AppState>,
     TypedHeader(cookie): TypedHeader<Cookie>,
-    request: Request<B>,
-    next: Next<B>,
-) -> Result<Response, StatusCode> {
+    mut request: Request<B>,
+) -> Result<Request<B>, StatusCode> {
     let auth_cookie = cookie.get("auth_token").unwrap_or("");
     match validate_cookie(auth_cookie.to_string(), state.connection_pool.clone()).await {
         Some(value) => {
-            let mut data = state.user.lock().await;
-            data.username = value.username;
-            data.id = value.id;
-            std::mem::drop(data);
-            let response = next.run(request).await;
-            Ok(response)
+            request
+                .headers_mut()
+                .insert("username", value.username.parse().unwrap());
+
+            Ok(request)
         }
         None => Err(StatusCode::UNAUTHORIZED),
     }

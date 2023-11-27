@@ -1,6 +1,6 @@
 use axum::{
     middleware,
-    routing::{delete, get, post, patch},
+    routing::{delete, get, patch, post},
     Router,
 };
 use sqlx::{
@@ -57,7 +57,7 @@ async fn main() {
         .route("/item", patch(route_handlers::allocate_item))
         .route("/items", get(route_handlers::get_items))
         .route("/users", get(route_handlers::get_users))
-        .route_layer(middleware::from_fn_with_state(
+        .route_layer(middleware::map_request_with_state(
             app_state.clone(),
             auth_and_login::auth,
         ));
