@@ -81,10 +81,13 @@ pub async fn auth<B>(
 ) -> Result<Request<B>, StatusCode> {
     let auth_cookie = cookie.get("auth_token").unwrap_or("");
     match validate_cookie(auth_cookie.to_string(), state.connection_pool.clone()).await {
-        Some(value) => {
+        Some(user) => {
             request
                 .headers_mut()
-                .insert("username", value.username.parse().unwrap());
+                .insert("username", user.username.parse().unwrap());
+            request
+                .headers_mut()
+                .insert("user-id", user.id.try_into().unwrap());
 
             Ok(request)
         }

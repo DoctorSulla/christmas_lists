@@ -1,3 +1,4 @@
+use axum::headers::HeaderMap;
 use num::{Float, FromPrimitive};
 use std::time::SystemTime;
 // Convert a floating point number to pounds and pence
@@ -24,5 +25,15 @@ pub fn get_epoch_time() -> i64 {
         .unwrap()
         .as_secs()
         .try_into()
+        .unwrap()
+}
+
+pub fn get_user_id_from_header(headers: HeaderMap) -> i32 {
+    headers
+        .get("user-id")
+        .unwrap()
+        .to_str()
+        .unwrap()
+        .parse()
         .unwrap()
 }

@@ -1,4 +1,3 @@
-
 use sqlx::SqlitePool;
 
 // Create tables
@@ -27,7 +26,7 @@ pub async fn create(pool: SqlitePool) {
     .expect("Failed to create table");
 
     sqlx::query(
-        "CREATE TABLE IF NOT EXISTS lists(
+        "CREATE TABLE IF NOT EXISTS presents(
             id INTEGER PRIMARY KEY AUTOINCREMENT, 
             user_id INTEGER,
             name VARCHAR(50),

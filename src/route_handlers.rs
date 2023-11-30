@@ -1,11 +1,13 @@
 use crate::{auth_and_login, utilities, AppState};
 use axum::{
     body::{Bytes, Full},
-    extract::{Form, Path, Query, State},
+    extract::{Form, Path, State},
     http::{HeaderMap, StatusCode},
     response::{Html, Response},
 };
+use futures::TryStreamExt;
 use serde::{Deserialize, Serialize};
+use sqlx::Row;
 use std::fs;
 
 #[derive(Serialize, Deserialize)]
@@ -17,7 +19,12 @@ pub struct Item {
 
 #[derive(Serialize, Deserialize)]
 pub struct DeleteRequest {
-    id: u32,
+    item_id: i32,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct GetItemsRequest {
+    user_id: i32,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -112,10 +119,15 @@ pub async fn register(State(state): State<AppState>, Form(form_data): Form<Regis
         .expect("Failed to create registration");
 }
 
-pub async fn add_item(State(state): State<AppState>, Form(form_data): Form<Item>) -> Html<String> {
-    let data = state.user.lock().await;
-    sqlx::query("INSERT INTO lists (user_id,name,url,price,taken) values(?,?,?,?,false)")
-        .bind(data.id)
+pub async fn add_item(
+    State(state): State<AppState>,
+    headers: HeaderMap,
+    Form(form_data): Form<Item>,
+) -> Html<String> {
+    let user_id = utilities::get_user_id_from_header(headers);
+
+    sqlx::query("INSERT INTO presents (user_id,name,url,price,taken) values(?,?,?,?,false)")
+        .bind(user_id)
         .bind(&form_data.name)
         .bind(&form_data.url)
         .bind(utilities::format_currency(form_data.price))
@@ -131,17 +143,50 @@ pub async fn add_item(State(state): State<AppState>, Form(form_data): Form<Item>
     ))
 }
 
-pub async fn delete_item(delete_request: Query<DeleteRequest>) -> Html<String> {
-    println!("Trying to remove item {}", delete_request.id);
-    Html("test".to_string())
+pub async fn delete_item(
+    State(state): State<AppState>,
+    headers: HeaderMap,
+    delete_request: Path<DeleteRequest>,
+) -> Html<String> {
+    let user_id = utilities::get_user_id_from_header(headers);
+    sqlx::query("DELETE FROM presents WHERE id=? AND user_id=?")
+        .bind(delete_request.item_id)
+        .bind(user_id)
+        .execute(&state.connection_pool)
+        .await
+        .expect("Failed to delete item from list.");
+
+    Html("Deleted item from list.".to_string())
 }
 
-pub async fn get_items() {
-    println!("Trying to get items");
+pub async fn get_items(
+    State(state): State<AppState>,
+    headers: HeaderMap,
+    items_request: Path<GetItemsRequest>,
+) -> Html<&'static str> {
+    let user_id = utilities::get_user_id_from_header(headers);
+    let requested_user_id = items_request.user_id;
+    if user_id == requested_user_id {
+        Html("You are requesting your own list")
+    } else {
+        Html("You are requesting someone else's list")
+    }
 }
 
-pub async fn get_users() {
-    println!("Getting list of users");
+pub async fn get_users(State(state): State<AppState>) -> Html<String> {
+    let mut users_list = String::new();
+    let mut rows = sqlx::query("SELECT username,id FROM users").fetch(&state.connection_pool);
+
+    while let Some(row) = rows.try_next().await.unwrap() {
+        let username: &str = row.try_get("username").unwrap();
+        let user_id: i32 = row.try_get("id").unwrap();
+        users_list = format!(
+            "{}<option value='{}'>{}</option>",
+            users_list, user_id, username
+        );
+    }
+
+    Html(users_list)
 }
 
 pub async fn allocate_item() {

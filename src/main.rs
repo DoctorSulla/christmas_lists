@@ -7,8 +7,6 @@ use sqlx::{
     sqlite::{SqliteConnectOptions, SqlitePoolOptions},
     SqlitePool,
 };
-use std::sync::Arc;
-use tokio::sync::Mutex;
 
 pub mod auth_and_login;
 pub mod route_handlers;
@@ -18,7 +16,6 @@ pub mod utilities;
 #[derive(Clone)]
 pub struct AppState {
     connection_pool: SqlitePool,
-    user: Arc<Mutex<User>>,
 }
 
 #[derive(Clone, sqlx::FromRow, Debug)]
@@ -45,17 +42,13 @@ async fn main() {
 
     let app_state: AppState = AppState {
         connection_pool: pool,
-        user: Arc::new(Mutex::new(User {
-            id: 0,
-            username: String::new(),
-        })),
     };
 
     let protected_routes = Router::new()
         .route("/item", post(route_handlers::add_item))
-        .route("/item", delete(route_handlers::delete_item))
+        .route("/item/:item_id", delete(route_handlers::delete_item))
         .route("/item", patch(route_handlers::allocate_item))
-        .route("/items", get(route_handlers::get_items))
+        .route("/items/:user_id", get(route_handlers::get_items))
         .route("/users", get(route_handlers::get_users))
         .route_layer(middleware::map_request_with_state(
             app_state.clone(),
