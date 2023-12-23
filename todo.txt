@@ -1,7 +1,0 @@
-To do list:
-- Implement IAM
-- Improve front end
-- Implement retrieve items
-- Finish implementing delete items
-- Implement get users
-

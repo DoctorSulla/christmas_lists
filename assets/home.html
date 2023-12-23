@@ -23,21 +23,14 @@
   </head>
   <body>
     <h1>Your list</h1>
-    <table id="list-table">
-      <thead>
-        <tr>
-          <th>Item Name</th>
-          <th>Item URL</th>
-          <th>Item Price</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-    <form hx-post="../item" hx-target="#list-table thead" hx-swap="beforeend">
+
+    <form hx-post="../item" hx-target="#list-table tbody" hx-swap="beforeend">
       <input type="text" name="name" placeholder="Name" />
       <input type="url" name="url" placeholder="URL" />
       <input type="number" name="price" placeholder="Price" step=".01" value="00.00" />
       <button type="submit">Add Item</button>
     </form>
+    <div hx-trigger="load" hx-get="../items/1" id="items">
+    </div>
   </body>
 </html>

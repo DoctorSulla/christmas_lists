@@ -53,7 +53,7 @@ pub async fn verify_login(username: &str, password: &str, pool: SqlitePool) -> O
     }
 }
 
-// Confirm the cookie is valid and return a the user if so
+// Confirm the cookie is valid and return the user if so
 pub async fn validate_cookie(cookie_value: String, pool: SqlitePool) -> Option<User> {
     let current_time: i64 = utilities::get_epoch_time();
 
@@ -69,7 +69,9 @@ pub async fn validate_cookie(cookie_value: String, pool: SqlitePool) -> Option<U
         Err(_e) => None,
     }
     .unwrap();
-    let user_id: i32 = query.try_get("user_id").unwrap();
+    let user_id: i32 = query
+        .try_get("user_id")
+        .expect("Unable to get user id from cookie");
     get_user(user_id, pool.clone()).await
 }
 

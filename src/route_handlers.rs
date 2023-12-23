@@ -24,13 +24,24 @@ pub struct DeleteRequest {
 
 #[derive(Serialize, Deserialize)]
 pub struct GetItemsRequest {
-    user_id: i32,
+    user_id: Option<i32>,
 }
 
 #[derive(Serialize, Deserialize)]
 pub struct RegistrationRequest {
     pub username: String,
     pub password: String,
+}
+
+#[derive(Serialize, Deserialize, sqlx::FromRow)]
+pub struct Present {
+    id: i32,
+    name: String,
+    url: String,
+    price: String,
+    taken: bool,
+    #[sqlx(rename = "username")]
+    taken_by_name: Option<String>,
 }
 
 // Serve a static file
@@ -76,7 +87,7 @@ pub async fn process_login(
     )
     .await
     {
-        Some(_value) => {
+        Some(value) => {
             response_html = "".to_string();
 
             let token = auth_and_login::generate_token();
@@ -86,7 +97,7 @@ pub async fn process_login(
 
             sqlx::query("INSERT INTO auth_tokens (token,user_id,expiry,revoked) values(?,?,?,?)")
                 .bind(&token)
-                .bind(1)
+                .bind(value.id)
                 .bind(expiry)
                 .bind(false)
                 .execute(&state.connection_pool)
@@ -126,21 +137,21 @@ pub async fn add_item(
 ) -> Html<String> {
     let user_id = utilities::get_user_id_from_header(headers);
 
-    sqlx::query("INSERT INTO presents (user_id,name,url,price,taken) values(?,?,?,?,false)")
-        .bind(user_id)
-        .bind(&form_data.name)
-        .bind(&form_data.url)
-        .bind(utilities::format_currency(form_data.price))
-        .execute(&state.connection_pool)
-        .await
-        .expect("Failed to add item to list.");
+    let new_row = sqlx::query(
+        "INSERT INTO presents (user_id,name,url,price,taken) values(?,?,?,?,false) RETURNING id",
+    )
+    .bind(user_id)
+    .bind(&form_data.name)
+    .bind(&form_data.url)
+    .bind(utilities::format_currency(form_data.price))
+    .fetch_one(&state.connection_pool)
+    .await
+    .expect("Failed to add item to list.");
 
-    Html(format!(
-        "<tr><td>{}</td><td>{}</td><td>{}</td></tr>",
-        form_data.name,
-        form_data.url,
-        utilities::format_currency(form_data.price)
-    ))
+    let created_id: i32 = new_row.try_get("id").unwrap();
+
+    Html(format!("<tr><td><a href='{}'>{}</a></td><td>{}</td><td>{}</td><td><a href='#' hx-delete='../item/{}' hx-confirm='Please confirm you wish to delete {} from your list'>&times;</a></td></tr>\n",
+                form_data.url, form_data.name, utilities::format_currency(form_data.price),false,created_id,form_data.name))
 }
 
 pub async fn delete_item(
@@ -163,14 +174,57 @@ pub async fn get_items(
     State(state): State<AppState>,
     headers: HeaderMap,
     items_request: Path<GetItemsRequest>,
-) -> Html<&'static str> {
+) -> Html<String> {
     let user_id = utilities::get_user_id_from_header(headers);
-    let requested_user_id = items_request.user_id;
+    let requested_user_id = match items_request.user_id {
+        Some(i) => i,
+        None => user_id,
+    };
+    let mut presents = sqlx::query_as::<_, Present>(
+        "SELECT 
+            p.id,
+            p.name,
+            p.url,
+            p.price,
+            p.taken,
+            u.username
+        FROM 
+            presents p 
+        LEFT JOIN 
+            users u 
+        ON 
+            p.taken_by_id = u.id 
+        WHERE 
+            user_id=?",
+    )
+    .bind(requested_user_id)
+    .fetch(&state.connection_pool);
+
+    let mut res = String::from("<table id='list-table'>");
     if user_id == requested_user_id {
-        Html("You are requesting your own list")
+        res.push_str(
+            "<thead><th>Name</th><th>Price</th><th>Allocated</th><th>Delete</th></tr></thead>\n<tbody>",
+        );
     } else {
-        Html("You are requesting someone else's list")
+        res.push_str(
+            "<thead><th>Name</th><th>Price</th><th>Allocated</th><th>Allocated to</th><th>Allocate</th></tr></thead>\n",
+        );
     }
+    while let Some(row) = presents.try_next().await.unwrap() {
+        if user_id == requested_user_id {
+            res = format!(
+                "{}<tr><td><a href='{}'>{}</a></td><td>{}</td><td>{}</td><td><a href='#' hx-delete='../item/{}' hx-confirm='Please confirm you wish to delete {} from your list'>&times;</a></td></tr>\n",
+                res, row.url, row.name, row.price, row.taken,row.id,row.name
+            );
+        } else {
+            res = format!(
+                "{}<tr><td><a href='{}'>{}</a></td><td>{}</td><td>{}</td><td>{}</td><td><a hx-patch='../item/{}' hx-confirm='Please confirm you are buying or have bought {}' href='#'>I'm buying this</a></td></tr>\n",
+                res, row.url, row.name, row.price, row.taken, row.taken_by_name.unwrap_or_default(),row.id,row.name
+            );
+        }
+    }
+    res.push_str("</tbody></table>");
+    Html(res)
 }
 
 pub async fn get_users(State(state): State<AppState>) -> Html<String> {
