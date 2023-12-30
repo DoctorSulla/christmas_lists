@@ -44,6 +44,11 @@ pub struct Present {
     taken_by_name: Option<String>,
 }
 
+#[derive(Serialize, Deserialize)]
+pub struct AllocateItemRequest {
+    pub id: i32,
+}
+
 // Serve a static file
 pub async fn load_file(Path(file_name): Path<String>) -> Response<Full<Bytes>> {
     let file_path = format!("./assets/{}", file_name);
@@ -150,7 +155,7 @@ pub async fn add_item(
 
     let created_id: i32 = new_row.try_get("id").unwrap();
 
-    Html(format!("<tr><td><a href='{}'>{}</a></td><td>{}</td><td>{}</td><td><a href='#' hx-delete='../item/{}' hx-confirm='Please confirm you wish to delete {} from your list'>&times;</a></td></tr>\n",
+    Html(format!("<tr><td><a href='{}'>{}</a></td><td>{}</td><td>{}</td><td><a href='#' hx-delete='../item/{}' hx-target='closest tr' hx-swap='outerHTML' hx-confirm='Please confirm you wish to delete {} from your list'>&times;</a></td></tr>\n",
                 form_data.url, form_data.name, utilities::format_currency(form_data.price),false,created_id,form_data.name))
 }
 
@@ -167,7 +172,7 @@ pub async fn delete_item(
         .await
         .expect("Failed to delete item from list.");
 
-    Html("Deleted item from list.".to_string())
+    Html("".to_string())
 }
 
 pub async fn get_items(
@@ -213,7 +218,7 @@ pub async fn get_items(
     while let Some(row) = presents.try_next().await.unwrap() {
         if user_id == requested_user_id {
             res = format!(
-                "{}<tr><td><a href='{}'>{}</a></td><td>{}</td><td>{}</td><td><a href='#' hx-delete='../item/{}' hx-confirm='Please confirm you wish to delete {} from your list'>&times;</a></td></tr>\n",
+                "{}<tr><td><a href='{}'>{}</a></td><td>{}</td><td>{}</td><td><a href='#' hx-target='closest tr' hx-swap='outerHTML' hx-delete='../item/{}' hx-confirm='Please confirm you wish to delete {} from your list'>&times;</a></td></tr>\n",
                 res, row.url, row.name, row.price, row.taken,row.id,row.name
             );
         } else {
@@ -243,6 +248,20 @@ pub async fn get_users(State(state): State<AppState>) -> Html<String> {
     Html(users_list)
 }
 
-pub async fn allocate_item() {
+pub async fn allocate_item(
+    State(state): State<AppState>,
+    allocated_item: Path<AllocateItemRequest>,
+    headers: HeaderMap,
+) -> Html<String> {
     println!("Trying to allocate item");
+    let user_id = utilities::get_user_id_from_header(headers);
+
+    sqlx::query("UPDATE presents SET taken=true, taken_by_id=? WHERE id=?")
+        .bind(user_id)
+        .bind(allocated_item.id)
+        .execute(&state.connection_pool)
+        .await
+        .expect("Failed to allocate item.");
+
+    Html("Successfully allocated item.".to_string())
 }
