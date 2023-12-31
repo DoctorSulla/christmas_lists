@@ -1,36 +1,41 @@
 <!doctype html>
 <html>
-  <head>
-    <title>Halliday Christmas Lists</title>
-    <style>
-      form {
-        width: fit-content;
-      }
-      .form-input {
-        display: flex;
-        justify-content: space-between;
-        margin: 10px 0;
-      }
-      .form-input > label {
-        margin-right: 10px;
-      }
-    </style>
-    <script
-      src="https://unpkg.com/htmx.org@1.9.8"
-      integrity="sha384-rgjA7mptc2ETQqXoYC3/zJvkU7K/aP44Y+z7xQuJiVnB/422P/Ak+F/AqFR7E4Wr"
-      crossorigin="anonymous"
-    ></script>
-  </head>
-  <body>
-    <h1>Your list</h1>
 
-    <form hx-post="../item" hx-target="#list-table tbody" hx-swap="beforeend">
-      <input type="text" name="name" placeholder="Name" />
-      <input type="url" name="url" placeholder="URL" />
-      <input type="number" name="price" placeholder="Price" step=".01" value="00.00" />
-      <button type="submit">Add Item</button>
-    </form>
-    <div hx-trigger="load" hx-get="../items/1" id="items">
-    </div>
-  </body>
+<head>
+  <title>Halliday Christmas Lists</title>
+  <style>
+    form {
+      width: fit-content;
+    }
+
+    .form-input {
+      display: flex;
+      justify-content: space-between;
+      margin: 10px 0;
+    }
+
+    .form-input>label {
+      margin-right: 10px;
+    }
+  </style>
+  <script src="https://unpkg.com/htmx.org@1.9.8"
+    integrity="sha384-rgjA7mptc2ETQqXoYC3/zJvkU7K/aP44Y+z7xQuJiVnB/422P/Ak+F/AqFR7E4Wr"
+    crossorigin="anonymous"></script>
+</head>
+
+<body>
+  <h1>Your list</h1>
+  <div hx-get="../users" hx-trigger="load">
+  </div>
+
+  <form hx-post="../item" hx-target="#list-table tbody" hx-swap="beforeend">
+    <input type="text" name="name" placeholder="Name" />
+    <input type="url" name="url" placeholder="URL" />
+    <input type="number" name="price" placeholder="Price" step=".01" value="00.00" />
+    <button type="submit">Add Item</button>
+  </form>
+  <div hx-trigger="load" hx-get="../items/1" id="items">
+  </div>
+</body>
+
 </html>

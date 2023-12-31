@@ -233,7 +233,7 @@ pub async fn get_items(
 }
 
 pub async fn get_users(State(state): State<AppState>) -> Html<String> {
-    let mut users_list = String::new();
+    let mut users_list = String::from("<select hx-target='#items' hx-get='../items/' hx-on='htmx:configRequest: event.detail.path += this.value' id='users-list' name='users-list'>");
     let mut rows = sqlx::query("SELECT username,id FROM users").fetch(&state.connection_pool);
 
     while let Some(row) = rows.try_next().await.unwrap() {
@@ -244,6 +244,8 @@ pub async fn get_users(State(state): State<AppState>) -> Html<String> {
             users_list, user_id, username
         );
     }
+
+    users_list.push_str("</select>");
 
     Html(users_list)
 }
