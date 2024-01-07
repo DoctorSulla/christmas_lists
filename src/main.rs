@@ -20,7 +20,7 @@ pub struct AppState {
 
 #[derive(Clone, sqlx::FromRow, Debug)]
 pub struct User {
-    id: i16,
+    id: i32,
     username: String,
 }
 

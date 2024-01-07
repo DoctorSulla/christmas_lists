@@ -46,7 +46,7 @@ pub struct Present {
 
 #[derive(Serialize, Deserialize)]
 pub struct AllocateItemRequest {
-    pub id: i32,
+    pub item_id: i32,
 }
 
 // Serve a static file
@@ -179,7 +179,9 @@ pub async fn get_items(
     State(state): State<AppState>,
     headers: HeaderMap,
     items_request: Path<GetItemsRequest>,
-) -> Html<String> {
+) -> (HeaderMap, Html<String>) {
+    let mut response_headers = HeaderMap::new();
+
     let user_id = utilities::get_user_id_from_header(headers);
     let requested_user_id = match items_request.user_id {
         Some(i) => i,
@@ -207,10 +209,12 @@ pub async fn get_items(
 
     let mut res = String::from("<table id='list-table'>");
     if user_id == requested_user_id {
+        response_headers.insert("HX-Trigger", "showAddForm".parse().unwrap());
         res.push_str(
             "<thead><th>Name</th><th>Price</th><th>Allocated</th><th>Delete</th></tr></thead>\n<tbody>",
         );
     } else {
+        response_headers.insert("HX-Trigger", "hideAddForm".parse().unwrap());
         res.push_str(
             "<thead><th>Name</th><th>Price</th><th>Allocated</th><th>Allocated to</th><th>Allocate</th></tr></thead>\n",
         );
@@ -229,20 +233,34 @@ pub async fn get_items(
         }
     }
     res.push_str("</tbody></table>");
-    Html(res)
+    (response_headers, Html(res))
 }
 
-pub async fn get_users(State(state): State<AppState>) -> Html<String> {
+pub async fn get_users(State(state): State<AppState>, headers: HeaderMap) -> Html<String> {
+    let calling_user: crate::User = auth_and_login::get_user(
+        utilities::get_user_id_from_header(headers),
+        state.connection_pool.to_owned(),
+    )
+    .await
+    .expect("Unable to fetch user");
     let mut users_list = String::from("<select hx-target='#items' hx-get='../items/' hx-on='htmx:configRequest: event.detail.path += this.value' id='users-list' name='users-list'>");
-    let mut rows = sqlx::query("SELECT username,id FROM users").fetch(&state.connection_pool);
+    users_list = format!(
+        "{}<option value='{}'>{}</option>",
+        users_list, calling_user.id, calling_user.username
+    );
+    let mut rows = sqlx::query("SELECT username,id FROM users ORDER by username ASC")
+        .fetch(&state.connection_pool);
 
     while let Some(row) = rows.try_next().await.unwrap() {
         let username: &str = row.try_get("username").unwrap();
         let user_id: i32 = row.try_get("id").unwrap();
-        users_list = format!(
-            "{}<option value='{}'>{}</option>",
-            users_list, user_id, username
-        );
+        if user_id == calling_user.id {
+        } else {
+            users_list = format!(
+                "{}<option value='{}'>{}</option>",
+                users_list, user_id, username
+            );
+        }
     }
 
     users_list.push_str("</select>");
@@ -260,7 +278,7 @@ pub async fn allocate_item(
 
     sqlx::query("UPDATE presents SET taken=true, taken_by_id=? WHERE id=?")
         .bind(user_id)
-        .bind(allocated_item.id)
+        .bind(allocated_item.item_id)
         .execute(&state.connection_pool)
         .await
         .expect("Failed to allocate item.");
