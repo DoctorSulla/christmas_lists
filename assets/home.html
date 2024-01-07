@@ -4,6 +4,11 @@
 <head>
   <title>Halliday Christmas Lists</title>
   <style>
+    html,
+    body {
+      font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif
+    }
+
     form {
       width: fit-content;
     }
@@ -17,10 +22,37 @@
     .form-input>label {
       margin-right: 10px;
     }
+
+    table,
+    td,
+    tr,
+    th {
+      border: 1px solid black;
+      border-collapse: collapse;
+      padding: 5px;
+    }
+
+    th {
+      background-color: #ddd;
+    }
+
+    td {
+      padding: 5px;
+    }
+
+    tr:nth-child(even) {
+      background-color: #f2f2f2;
+    }
+
+    tr:hover {
+      background-color: #ddd;
+    }
   </style>
   <script src="https://unpkg.com/htmx.org@1.9.8"
     integrity="sha384-rgjA7mptc2ETQqXoYC3/zJvkU7K/aP44Y+z7xQuJiVnB/422P/Ak+F/AqFR7E4Wr"
     crossorigin="anonymous"></script>
+  <script src="https://kit.fontawesome.com/c5aa4fd88b.js" crossorigin="anonymous"></script>
+
   <script>
     document.addEventListener("showAddForm", function () {
       document.getElementById("add-form").style.display = "block";
@@ -32,14 +64,16 @@
   </script>
 </head>
 
-<body>Choose whose list you wish to view:
+<body>
+  <p>Choose whose list you wish to view:</p>
   <div hx-get="../users" hx-trigger="load">
   </div>
+  <br>
 
   <div hx-trigger="load" hx-get="../items/" id="items">
   </div>
 
-  <form id='add-form' hx-target="#add-form" hx-post="../item" hx-target="#list-table tbody" hx-swap="beforeend">
+  <form id='add-form' hx-post="../item" hx-target="#list-table tbody" hx-swap="beforeend">
     <input type="text" name="name" placeholder="Name" required />
     <input type="url" name="url" placeholder="URL" required />
     <input type="number" name="price" placeholder="Price" step=".01" value="00.00" required />

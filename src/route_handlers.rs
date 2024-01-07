@@ -155,7 +155,7 @@ pub async fn add_item(
 
     let created_id: i32 = new_row.try_get("id").unwrap();
 
-    Html(format!("<tr><td><a href='{}'>{}</a></td><td>{}</td><td>{}</td><td><a href='#' hx-delete='../item/{}' hx-target='closest tr' hx-swap='outerHTML' hx-confirm='Please confirm you wish to delete {} from your list'>&times;</a></td></tr>\n",
+    Html(format!("<tr><td><a href='{}'>{}</a></td><td>{}</td><td>{}</td><td><a href='#' hx-delete='../item/{}' hx-target='closest tr' hx-swap='outerHTML' hx-confirm='Please confirm you wish to delete {} from your list'><i class=\"fa-duotone fa-trash-can\"></i></a></td></tr>\n",
                 form_data.url, form_data.name, utilities::format_currency(form_data.price),false,created_id,form_data.name))
 }
 
@@ -222,13 +222,19 @@ pub async fn get_items(
     while let Some(row) = presents.try_next().await.unwrap() {
         if user_id == requested_user_id {
             res = format!(
-                "{}<tr><td><a href='{}'>{}</a></td><td>{}</td><td>{}</td><td><a href='#' hx-target='closest tr' hx-swap='outerHTML' hx-delete='../item/{}' hx-confirm='Please confirm you wish to delete {} from your list'>&times;</a></td></tr>\n",
+                "{}<tr><td><a href='{}'>{}</a></td><td>{}</td><td>{}</td><td><a href='#' hx-target='closest tr' hx-swap='outerHTML' hx-delete='../item/{}' hx-confirm='Please confirm you wish to delete {} from your list'><i class=\"fa-duotone fa-trash-can\"></i></a></td></tr>\n",
                 res, row.url, row.name, row.price, row.taken,row.id,row.name
             );
         } else {
+            let buying_it_text: String;
+            if row.taken {
+                buying_it_text = "".to_string();
+            } else {
+                buying_it_text = "I'm buying this".to_string();
+            }
             res = format!(
-                "{}<tr><td><a href='{}'>{}</a></td><td>{}</td><td>{}</td><td>{}</td><td><a hx-patch='../item/{}' hx-confirm='Please confirm you are buying or have bought {}' hx-target='closest tr' href='#'>I'm buying this</a></td></tr>\n",
-                res, row.url, row.name, row.price, row.taken, row.taken_by_name.unwrap_or_default(),row.id,row.name
+                "{}<tr><td><a href='{}'>{}</a></td><td>{}</td><td>{}</td><td>{}</td><td><a hx-patch='../item/{}' hx-confirm='Please confirm you are buying or have bought {}' hx-target='closest tr' href='#'>{}</a></td></tr>\n",
+                res, row.url, row.name, row.price, row.taken, row.taken_by_name.unwrap_or_default(),row.id,row.name, buying_it_text
             );
         }
     }
@@ -245,8 +251,8 @@ pub async fn get_users(State(state): State<AppState>, headers: HeaderMap) -> Htm
     .expect("Unable to fetch user");
     let mut users_list = String::from("<select hx-target='#items' hx-get='../items/' hx-on='htmx:configRequest: event.detail.path += this.value' id='users-list' name='users-list'>");
     users_list = format!(
-        "{}<option value='{}'>{}</option>",
-        users_list, calling_user.id, calling_user.username
+        "{}<option value='{}'>Your list</option>",
+        users_list, calling_user.id
     );
     let mut rows = sqlx::query("SELECT username,id FROM users ORDER by username ASC")
         .fetch(&state.connection_pool);
