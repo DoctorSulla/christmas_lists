@@ -227,7 +227,7 @@ pub async fn get_items(
             );
         } else {
             res = format!(
-                "{}<tr><td><a href='{}'>{}</a></td><td>{}</td><td>{}</td><td>{}</td><td><a hx-patch='../item/{}' hx-confirm='Please confirm you are buying or have bought {}' href='#'>I'm buying this</a></td></tr>\n",
+                "{}<tr><td><a href='{}'>{}</a></td><td>{}</td><td>{}</td><td>{}</td><td><a hx-patch='../item/{}' hx-confirm='Please confirm you are buying or have bought {}' hx-target='closest tr' href='#'>I'm buying this</a></td></tr>\n",
                 res, row.url, row.name, row.price, row.taken, row.taken_by_name.unwrap_or_default(),row.id,row.name
             );
         }
@@ -275,13 +275,24 @@ pub async fn allocate_item(
 ) -> Html<String> {
     println!("Trying to allocate item");
     let user_id = utilities::get_user_id_from_header(headers);
-
-    sqlx::query("UPDATE presents SET taken=true, taken_by_id=? WHERE id=?")
-        .bind(user_id)
-        .bind(allocated_item.item_id)
-        .execute(&state.connection_pool)
+    let user = auth_and_login::get_user(user_id, state.connection_pool.clone())
         .await
-        .expect("Failed to allocate item.");
+        .expect("Unable to get username");
+    let result = sqlx::query(
+        "UPDATE presents SET taken=true, taken_by_id=? WHERE id=? RETURNING name,url,price",
+    )
+    .bind(user_id)
+    .bind(allocated_item.item_id)
+    .fetch_one(&state.connection_pool)
+    .await
+    .expect("Failed to allocate item.");
 
-    Html("Successfully allocated item.".to_string())
+    let url: String = result.try_get("url").unwrap();
+    let name: String = result.try_get("name").unwrap();
+    let price: String = result.try_get("price").unwrap();
+
+    Html(format!(
+        "<td><a href='{}'>{}</a></td><td>{}</td><td>true</td><td>{}</td>",
+        url, name, price, user.username
+    ))
 }
