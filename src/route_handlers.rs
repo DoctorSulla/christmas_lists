@@ -6,6 +6,7 @@ use axum::{
     response::{Html, Response},
 };
 use futures::TryStreamExt;
+use html_escape::encode_text;
 use serde::{Deserialize, Serialize};
 use sqlx::Row;
 use std::fs;
@@ -211,19 +212,19 @@ pub async fn get_items(
     if user_id == requested_user_id {
         response_headers.insert("HX-Trigger", "showAddForm".parse().unwrap());
         res.push_str(
-            "<thead><th>Name</th><th>Price</th><th>Allocated</th><th>Delete</th></tr></thead>\n<tbody>",
+            "<thead><th>Name</th><th>Price</th><th>Taken</th><th>Delete</th></tr></thead>\n<tbody>",
         );
     } else {
         response_headers.insert("HX-Trigger", "hideAddForm".parse().unwrap());
         res.push_str(
-            "<thead><th>Name</th><th>Price</th><th>Allocated</th><th>Allocated to</th><th>Allocate</th></tr></thead>\n",
+            "<thead><th>Name</th><th>Price</th><th>Taken</th><th>Taken by</th><th>Action</th></tr></thead>\n",
         );
     }
     while let Some(row) = presents.try_next().await.unwrap() {
         if user_id == requested_user_id {
             res = format!(
                 "{}<tr><td><a href='{}'>{}</a></td><td>{}</td><td>{}</td><td><a href='#' hx-target='closest tr' hx-swap='outerHTML' hx-delete='../item/{}' hx-confirm='Please confirm you wish to delete {} from your list'><i class=\"fa-duotone fa-trash-can\"></i></a></td></tr>\n",
-                res, row.url, row.name, row.price, row.taken,row.id,row.name
+                res, encode_text(&row.url), encode_text(&row.name), encode_text(&row.price), row.taken,row.id,encode_text(&row.name)
             );
         } else {
             let buying_it_text: String;
@@ -234,7 +235,7 @@ pub async fn get_items(
             }
             res = format!(
                 "{}<tr><td><a href='{}'>{}</a></td><td>{}</td><td>{}</td><td>{}</td><td><a hx-patch='../item/{}' hx-confirm='Please confirm you are buying or have bought {}' hx-target='closest tr' href='#'>{}</a></td></tr>\n",
-                res, row.url, row.name, row.price, row.taken, row.taken_by_name.unwrap_or_default(),row.id,row.name, buying_it_text
+                res, encode_text(&row.url), encode_text(&row.name), encode_text(&row.price), row.taken, encode_text(&row.taken_by_name.unwrap_or_default()),row.id,encode_text(&row.name), buying_it_text
             );
         }
     }

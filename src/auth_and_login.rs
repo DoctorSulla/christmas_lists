@@ -1,7 +1,7 @@
 use crate::{utilities, AppState, User};
 use axum::{
     extract::State,
-    http::{Request, StatusCode},
+    http::{HeaderMap, Request, StatusCode},
     TypedHeader,
 };
 use headers::Cookie;
@@ -67,12 +67,16 @@ pub async fn validate_cookie(cookie_value: String, pool: SqlitePool) -> Option<U
     {
         Ok(value) => value,
         Err(_e) => None,
+    };
+
+    if let Some(query) = query {
+        let user_id: i32 = query
+            .try_get("user_id")
+            .expect("Unable to get user id from cookie");
+        get_user(user_id, pool.clone()).await
+    } else {
+        None
     }
-    .unwrap();
-    let user_id: i32 = query
-        .try_get("user_id")
-        .expect("Unable to get user id from cookie");
-    get_user(user_id, pool.clone()).await
 }
 
 // Middleware to check the auth_token cookie
@@ -80,7 +84,9 @@ pub async fn auth<B>(
     State(state): State<AppState>,
     TypedHeader(cookie): TypedHeader<Cookie>,
     mut request: Request<B>,
-) -> Result<Request<B>, StatusCode> {
+) -> Result<Request<B>, (StatusCode, HeaderMap)> {
+    let mut redirect_header: HeaderMap = HeaderMap::new();
+    redirect_header.insert("HX-Redirect", "./index.html".parse().unwrap());
     let auth_cookie = cookie.get("auth_token").unwrap_or("");
     match validate_cookie(auth_cookie.to_string(), state.connection_pool.clone()).await {
         Some(user) => {
@@ -93,7 +99,7 @@ pub async fn auth<B>(
 
             Ok(request)
         }
-        None => Err(StatusCode::UNAUTHORIZED),
+        None => Err((StatusCode::UNAUTHORIZED, redirect_header)),
     }
 }
 
