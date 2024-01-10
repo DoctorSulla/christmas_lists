@@ -1,10 +1,9 @@
 use crate::{utilities, AppState, User};
 use axum::{
     extract::State,
-    http::{HeaderMap, Request, StatusCode},
-    TypedHeader,
+    http::{Request, StatusCode},
 };
-use headers::Cookie;
+use http::HeaderMap;
 use rand::Rng;
 use rand_chacha::rand_core::SeedableRng;
 use serde::{Deserialize, Serialize};
@@ -82,12 +81,21 @@ pub async fn validate_cookie(cookie_value: String, pool: SqlitePool) -> Option<U
 // Middleware to check the auth_token cookie
 pub async fn auth<B>(
     State(state): State<AppState>,
-    TypedHeader(cookie): TypedHeader<Cookie>,
+    headers: HeaderMap,
     mut request: Request<B>,
 ) -> Result<Request<B>, (StatusCode, HeaderMap)> {
     let mut redirect_header: HeaderMap = HeaderMap::new();
     redirect_header.insert("HX-Redirect", "./index.html".parse().unwrap());
-    let auth_cookie = cookie.get("auth_token").unwrap_or("");
+    let cookies_header = headers.get("Cookie").unwrap().to_str().unwrap();
+    let cookies: Vec<&str> = cookies_header.split(";").collect();
+    let mut auth_cookie = "";
+    for cookie in cookies.iter() {
+        let kv: Vec<&str> = cookie.split("=").collect();
+        println!("Key: {}, Value: {}", kv[0], kv[1]);
+        if kv[0] == "auth_token" {
+            auth_cookie = kv[1];
+        }
+    }
     match validate_cookie(auth_cookie.to_string(), state.connection_pool.clone()).await {
         Some(user) => {
             request

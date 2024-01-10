@@ -8,6 +8,10 @@ use sqlx::{
     SqlitePool,
 };
 
+use axum_server;
+//use axum_server::tls_rustls::RustlsConfig;
+use std::net::SocketAddr;
+
 pub mod auth_and_login;
 pub mod route_handlers;
 pub mod tables;
@@ -38,7 +42,13 @@ async fn main() {
         .await
         .expect("Failed to create connection pool");
 
+    // Create tables
     tables::create(pool.clone()).await;
+
+    // Create TLS Config
+    // let config = RustlsConfig::from_pem_file("./certs/cert.pem", "./certs/key.pem")
+    //     .await
+    //     .unwrap();
 
     let app_state: AppState = AppState {
         connection_pool: pool,
@@ -66,7 +76,14 @@ async fn main() {
         .merge(open_routes)
         .with_state(app_state);
 
-    axum::Server::bind(&"0.0.0.0:3000".parse().unwrap())
+    //     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
+    //     axum_server::bind_rustls(addr, config)
+    //         .serve(app.into_make_service())
+    //         .await
+    //         .unwrap();
+
+    let addr = SocketAddr::from(([127, 0, 0, 1], 9000));
+    axum_server::bind(addr)
         .serve(app.into_make_service())
         .await
         .unwrap();
