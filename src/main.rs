@@ -82,7 +82,7 @@ async fn main() {
     //         .await
     //         .unwrap();
 
-    let addr = SocketAddr::from(([127, 0, 0, 1], 9000));
+    let addr = SocketAddr::from(([0, 0, 0, 0], 9000));
     axum_server::bind(addr)
         .serve(app.into_make_service())
         .await
