@@ -2,6 +2,8 @@ FROM rust:latest
 
 WORKDIR /app
 
+ENV APP_ENVIRONMENT PRODUCTION
+
 RUN apt-get update
 
 RUN apt install git curl vim build-essential -y

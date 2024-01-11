@@ -41,7 +41,7 @@ async fn main() {
     match environment {
         Ok(i) => match i.as_str() {
             "PRODUCTION" => {
-                addr = SocketAddr::from(([0, 0, 0, 0], 3000));
+                addr = SocketAddr::from(([0, 0, 0, 0], 80));
                 file_path = "/app/christmas_lists/assets/".to_string();
             }
             "TEST" => {
