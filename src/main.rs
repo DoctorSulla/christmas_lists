@@ -8,6 +8,8 @@ use sqlx::{
     SqlitePool,
 };
 
+use std::env;
+
 use axum_server;
 //use axum_server::tls_rustls::RustlsConfig;
 use std::net::SocketAddr;
@@ -20,6 +22,7 @@ pub mod utilities;
 #[derive(Clone)]
 pub struct AppState {
     connection_pool: SqlitePool,
+    file_path: String,
 }
 
 #[derive(Clone, sqlx::FromRow, Debug)]
@@ -30,6 +33,34 @@ pub struct User {
 
 #[tokio::main]
 async fn main() {
+    let environment = env::var("APP_ENVIRONMENT");
+
+    let addr: SocketAddr;
+    let file_path: String;
+
+    match environment {
+        Ok(i) => match i.as_str() {
+            "PRODUCTION" => {
+                addr = SocketAddr::from(([0, 0, 0, 0], 3000));
+                file_path = "/app/christmas_lists/assets/".to_string();
+            }
+            "TEST" => {
+                addr = SocketAddr::from(([127, 0, 0, 1], 3000));
+                file_path = "./assets/".to_string();
+            }
+            _ => {
+                println!("Please set APP_ENVIRONMENT variable to either PRODUCTION or TEST");
+                addr = SocketAddr::from(([127, 0, 0, 1], 3000));
+                file_path = "./assets/".to_string();
+            }
+        },
+        Err(_e) => {
+            println!("Please set APP_ENVIRONMENT variable to either PRODUCTION or TEST");
+            addr = SocketAddr::from(([127, 0, 0, 1], 3000));
+            file_path = "./assets/".to_string();
+        }
+    }
+
     // Set connection options
     let connection_options = SqliteConnectOptions::new()
         .filename("christmas_lists.db")
@@ -52,6 +83,7 @@ async fn main() {
 
     let app_state: AppState = AppState {
         connection_pool: pool,
+        file_path: file_path.clone(),
     };
 
     let protected_routes = Router::new()
@@ -82,7 +114,6 @@ async fn main() {
     //         .await
     //         .unwrap();
 
-    let addr = SocketAddr::from(([0, 0, 0, 0], 9000));
     axum_server::bind(addr)
         .serve(app.into_make_service())
         .await

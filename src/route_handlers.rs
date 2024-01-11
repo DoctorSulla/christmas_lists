@@ -52,8 +52,11 @@ pub struct AllocateItemRequest {
 }
 
 // Serve a static file
-pub async fn load_file(Path(file_name): Path<String>) -> Response<Full<Bytes>> {
-    let file_path = format!("./assets/{}", file_name);
+pub async fn load_file(
+    State(state): State<AppState>,
+    Path(file_name): Path<String>,
+) -> Response<Full<Bytes>> {
+    let file_path = format!("{}{}", state.file_path, file_name);
     let parts: Vec<&str> = file_name.split('.').collect();
     let file_extension = parts[parts.len() - 1].to_lowercase();
     let mime_type = match file_extension.as_str() {
