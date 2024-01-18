@@ -3,67 +3,10 @@
 
 <head>
   <title>Halliday Christmas Lists</title>
-  <style>
-    html,
-    body {
-      font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif
-    }
 
-    #add-form {
-      margin: 15px 0;
-    }
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="./main.css">
 
-    #items table td:last-child {
-      text-align: center
-    }
-
-    table {
-      table-layout: fixed;
-      min-width: 400px;
-      max-width: 1000px;
-      width: 100%;
-      overflow-x: auto;
-    }
-
-    form {
-      width: fit-content;
-    }
-
-    .form-input {
-      display: flex;
-      justify-content: space-between;
-      margin: 10px 0;
-    }
-
-    .form-input>label {
-      margin-right: 10px;
-    }
-
-    table,
-    td,
-    tr,
-    th {
-      border: 1px solid black;
-      border-collapse: collapse;
-      padding: 5px;
-    }
-
-    th {
-      background-color: #ddd;
-    }
-
-    td {
-      padding: 5px;
-    }
-
-    tr:nth-child(even) {
-      background-color: #f2f2f2;
-    }
-
-    tr:hover {
-      background-color: #ddd;
-    }
-  </style>
   <script src="https://unpkg.com/htmx.org@1.9.8"
     integrity="sha384-rgjA7mptc2ETQqXoYC3/zJvkU7K/aP44Y+z7xQuJiVnB/422P/Ak+F/AqFR7E4Wr"
     crossorigin="anonymous"></script>
@@ -71,30 +14,37 @@
 
   <script>
     document.addEventListener("showAddForm", function () {
-      document.getElementById("add-form").style.display = "block";
+      document.getElementById("add-form-container").style.display = "block";
     })
 
     document.addEventListener("hideAddForm", function () {
-      document.getElementById("add-form").style.display = "none";
+      document.getElementById("add-form-container").style.display = "none";
     })
   </script>
+  <script src="./snowflakes.js"></script>
 </head>
 
 <body>
-  <p>Choose whose list you wish to view:</p>
-  <div hx-get="../users" hx-trigger="load">
-  </div>
-  <br>
+  <div id="container">
+    <h1>Halliday's Christmas Lists</h1>
+    <p>Choose whose list you wish to view:</p>
+    <div hx-get="./users" hx-trigger="load">
+    </div>
+    <br>
 
-  <div hx-trigger="load" hx-get="../items/" id="items">
-  </div>
+    <div hx-trigger="load" hx-get="./items/" id="items">
+    </div>
+    <div id="add-form-container">
+      <h3>Add a new item <i class="fa-kit fa-sharp-solid-gift-circle-plus"></i></h3>
 
-  <form id='add-form' hx-post="../item" hx-target="#list-table tbody" hx-swap="beforeend">
-    <input type="text" name="name" placeholder="Name" required />
-    <input type="url" name="url" placeholder="URL" required />
-    <input type="number" name="price" placeholder="Price" step=".01" value="00.00" required />
-    <button type="submit">Add Item</button>
-  </form>
+      <form id='add-form' hx-post="./item" hx-target="#list-table tbody" hx-swap="beforeend">
+        <input type="text" name="name" placeholder="Name" required />
+        <input type="url" name="url" placeholder="URL" required />
+        <input type="number" name="price" placeholder="Price" step=".01" value="00.00" required />
+        <button type="submit">Add Item</button>
+      </form>
+    </div>
+  </div>
 </body>
 
 </html>

@@ -1,8 +1,6 @@
-FROM rust:latest
+FROM rust:latest as build
 
 WORKDIR /app
-
-ENV APP_ENVIRONMENT PRODUCTION
 
 RUN apt-get update
 
@@ -14,4 +12,16 @@ WORKDIR /app/christmas_lists
 
 RUN cargo build --release
 
-ENTRYPOINT ["./target/release/christmas_lists"]
+FROM debian:stable
+
+ENV APP_ENVIRONMENT PRODUCTION
+
+WORKDIR /app/christmas_lists
+
+RUN mkdir assets
+
+COPY --from=build /app/christmas_lists/target/release/christmas_lists /app/christmas_lists
+
+COPY --from=build /app/christmas_lists/assets/* /app/christmas_lists/assets/
+
+ENTRYPOINT ["/app/christmas_lists/christmas_lists"]

@@ -99,9 +99,10 @@ async fn main() {
         ));
 
     let open_routes = Router::new()
-        .route("/assets/:file_name", get(route_handlers::load_file))
+        .route("/:file_name", get(route_handlers::load_file))
         .route("/login", post(route_handlers::process_login))
-        .route("/register", post(route_handlers::register));
+        .route("/register", post(route_handlers::register))
+        .fallback(route_handlers::not_found);
 
     let app = Router::new()
         .merge(protected_routes)

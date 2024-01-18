@@ -3,38 +3,41 @@
 
 <head>
   <title>Halliday Christmas Lists</title>
-  <style>
-    form {
-      width: fit-content;
-    }
 
-    .form-input {
-      display: flex;
-      justify-content: space-between;
-      margin: 10px 0;
-    }
+  <link rel="stylesheet" href="./main.css">
 
-    .form-input>label {
-      margin-right: 10px;
-    }
-  </style>
   <script src="https://unpkg.com/htmx.org@1.9.8"
     integrity="sha384-rgjA7mptc2ETQqXoYC3/zJvkU7K/aP44Y+z7xQuJiVnB/422P/Ak+F/AqFR7E4Wr"
     crossorigin="anonymous"></script>
+  <script src="https://kit.fontawesome.com/c5aa4fd88b.js" crossorigin="anonymous"></script>
+
+  <script>
+    document.addEventListener("showAddForm", function () {
+      document.getElementById("add-form").style.display = "block";
+    })
+
+    document.addEventListener("hideAddForm", function () {
+      document.getElementById("add-form").style.display = "none";
+    })
+  </script>
 </head>
 
 <body>
-  <h1>Login</h1>
-  <form hx-post="../login">
-    <div class="form-input">
-      <label for="username">Username</label><input type="text" id="username" name="username" required />
-    </div>
-    <div class="form-input">
-      <label for="password">Password</label><input type="password" id="password" name="password" required />
-    </div>
-    <button type="submit">Login</button><!--<a hx-boost="true" href="./register.html">Register</a>-->
-  </form>
-  <div id="login-response"></div>
+
+  <div id="container">
+
+    <h1>Login</h1>
+    <form hx-post="./login">
+      <div class="form-input">
+        <label for="username">Username</label><input type="text" id="username" name="username" required />
+      </div>
+      <div class="form-input">
+        <label for="password">Password</label><input type="password" id="password" name="password" required />
+      </div>
+      <button type="submit">Login</button><!--<a hx-boost="true" href="./register.html">Register</a>-->
+    </form>
+    <div id="login-response"></div>
+  </div>
 </body>
 
 </html>

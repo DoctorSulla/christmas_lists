@@ -73,10 +73,24 @@ pub async fn load_file(
     match std::path::Path::new(&file_path).exists() {
         true => body = fs::read(&file_path).unwrap(),
         false => {
-            body = fs::read("./assets/404.html").unwrap();
+            let not_found_path = format!("{}{}", state.file_path, "404.html");
+            body = fs::read(&not_found_path).unwrap();
             status_code = StatusCode::NOT_FOUND;
         }
     }
+    Response::builder()
+        .status(status_code)
+        .header("Content-Type", mime_type)
+        .body(Full::from(body))
+        .unwrap()
+}
+
+pub async fn not_found(State(state): State<AppState>) -> Response<Full<Bytes>> {
+    let not_found_path = format!("{}{}", state.file_path, "404.html");
+    let body = fs::read(&not_found_path).unwrap();
+    let status_code = StatusCode::NOT_FOUND;
+    let mime_type = "text/html";
+
     Response::builder()
         .status(status_code)
         .header("Content-Type", mime_type)
@@ -160,7 +174,7 @@ pub async fn add_item(
 
     let created_id: i32 = new_row.try_get("id").unwrap();
 
-    Html(format!("<tr><td><a href='{}'>{}</a></td><td>{}</td><td>{}</td><td><a href='#' hx-delete='../item/{}' hx-target='closest tr' hx-swap='outerHTML' hx-confirm='Please confirm you wish to delete {} from your list'><i class=\"fa-duotone fa-trash-can\"></i></a></td></tr>\n",
+    Html(format!("<tr><td><a href='{}'>{}</a></td><td>{}</td><td>{}</td><td><a href='#' hx-delete='./item/{}' hx-target='closest tr' hx-swap='outerHTML' hx-confirm='Please confirm you wish to delete {} from your list'><i class=\"fa-duotone fa-trash-can\"></i></a></td></tr>\n",
                 form_data.url, form_data.name, utilities::format_currency(form_data.price),false,created_id,form_data.name))
 }
 
@@ -224,26 +238,41 @@ pub async fn get_items(
             "<thead><th>Name</th><th>Price</th><th>Taken</th><th>Taken by</th><th>Action</th></tr></thead>\n",
         );
     }
+    let mut row_count = 0;
     while let Some(row) = presents.try_next().await.unwrap() {
+        row_count += 1;
+        let taken: String;
+        if row.taken {
+            taken = "<i class='fa-regular fa-check'></i>".to_string();
+        } else {
+            taken = "<i class='fa-regular fa-x'></i>".to_string();
+        }
         if user_id == requested_user_id {
             res = format!(
-                "{}<tr><td><a href='{}'>{}</a></td><td>{}</td><td>{}</td><td><a href='#' hx-target='closest tr' hx-swap='outerHTML' hx-delete='../item/{}' hx-confirm='Please confirm you wish to delete {} from your list'><i class=\"fa-duotone fa-trash-can\"></i></a></td></tr>\n",
-                res, encode_text(&row.url), encode_text(&row.name), encode_text(&row.price), row.taken,row.id,encode_text(&row.name)
+                "{}<tr><td><a href='{}'>{}</a></td><td>{}</td><td>{}</td><td><a href='#' hx-target='closest tr' hx-swap='outerHTML' hx-delete='./item/{}' hx-confirm='Please confirm you wish to delete {} from your list'><i class=\"fa-duotone fa-trash-can\"></i></a></td></tr>\n",
+                res, encode_text(&row.url), encode_text(&row.name), encode_text(&row.price), taken,row.id,encode_text(&row.name)
             );
         } else {
             let buying_it_text: String;
             if row.taken {
                 buying_it_text = "".to_string();
             } else {
-                buying_it_text = "I'm buying this".to_string();
+                buying_it_text = "<i class='fa-sharp fa-solid fa-cart-plus'></i>".to_string();
             }
             res = format!(
-                "{}<tr><td><a href='{}'>{}</a></td><td>{}</td><td>{}</td><td>{}</td><td><a hx-patch='../item/{}' hx-confirm='Please confirm you are buying or have bought {}' hx-target='closest tr' href='#'>{}</a></td></tr>\n",
-                res, encode_text(&row.url), encode_text(&row.name), encode_text(&row.price), row.taken, encode_text(&row.taken_by_name.unwrap_or_default()),row.id,encode_text(&row.name), buying_it_text
+                "{}<tr><td><a href='{}'>{}</a></td><td>{}</td><td>{}</td><td>{}</td><td><a hx-patch='./item/{}' hx-confirm='Please confirm you are buying or have bought {}' hx-target='closest tr' href='#'>{}</a></td></tr>\n",
+                res, encode_text(&row.url), encode_text(&row.name), encode_text(&row.price), taken, encode_text(&row.taken_by_name.unwrap_or_default()),row.id,encode_text(&row.name), buying_it_text
             );
         }
     }
     res.push_str("</tbody></table>");
+    if row_count == 0 {
+        if user_id != requested_user_id {
+            res = format!("<p>This person's list is currently empty.</p>");
+        } else {
+            res = format!("<p>You have no items in your list, try adding some below.</p>");
+        }
+    }
     (response_headers, Html(res))
 }
 
@@ -254,7 +283,7 @@ pub async fn get_users(State(state): State<AppState>, headers: HeaderMap) -> Htm
     )
     .await
     .expect("Unable to fetch user");
-    let mut users_list = String::from("<select hx-target='#items' hx-get='../items/' hx-on='htmx:configRequest: event.detail.path += this.value' id='users-list' name='users-list'>");
+    let mut users_list = String::from("<select hx-target='#items' hx-get='./items/' hx-on='htmx:configRequest: event.detail.path += this.value' id='users-list' name='users-list'>");
     users_list = format!(
         "{}<option value='{}'>Your list</option>",
         users_list, calling_user.id
@@ -303,7 +332,7 @@ pub async fn allocate_item(
     let price: String = result.try_get("price").unwrap();
 
     Html(format!(
-        "<td><a href='{}'>{}</a></td><td>{}</td><td>true</td><td>{}</td>",
+        "<td><a href='{}'>{}</a></td><td>{}</td><td><i class='fa-regular fa-check'></i></td><td>{}</td><td></td>",
         url, name, price, user.username
     ))
 }

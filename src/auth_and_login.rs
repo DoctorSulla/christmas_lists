@@ -86,12 +86,14 @@ pub async fn auth<B>(
 ) -> Result<Request<B>, (StatusCode, HeaderMap)> {
     let mut redirect_header: HeaderMap = HeaderMap::new();
     redirect_header.insert("HX-Redirect", "./index.html".parse().unwrap());
-    let cookies_header = headers.get("Cookie").unwrap().to_str().unwrap();
+    let cookies_header = match headers.get("Cookie") {
+        Some(cookie) => cookie.to_str().unwrap().to_string(),
+        None => "".to_string(),
+    };
     let cookies: Vec<&str> = cookies_header.split(";").collect();
     let mut auth_cookie = "";
     for cookie in cookies.iter() {
         let kv: Vec<&str> = cookie.split("=").collect();
-        println!("Key: {}, Value: {}", kv[0], kv[1]);
         if kv[0] == "auth_token" {
             auth_cookie = kv[1];
         }

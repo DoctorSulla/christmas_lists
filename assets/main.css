@@ -1,0 +1,101 @@
+a { color:blue }    
+html,
+    body {
+      padding: 0;
+      margin: 0;
+      font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+      background-color: #235E6F;
+      font-size: 16px;
+    }
+
+    input,
+    button,
+    select {
+      font-size: 16px
+    }
+
+    #add-form {
+      margin: 15px 0;
+    }
+
+    #items table td:last-child {
+      text-align: center
+    }
+
+    table {
+      table-layout: fixed;
+      min-width: 360px;
+      max-width: 1000px;
+      width: 100%;
+      overflow-x: auto;
+    }
+
+    form {
+
+      width: fit-content;
+    }
+
+    .form-input {
+      display: flex;
+      justify-content: space-between;
+      margin: 10px 0;
+
+    }
+
+    .form-input>label {
+      margin-right: 10px;
+    }
+
+    table,
+    td,
+    tr,
+    th {
+      border: 1px solid black;
+      border-collapse: collapse;
+      padding: 5px;
+    }
+
+    th {
+      background-color: #ffcc00;
+    }
+
+    td {
+      padding: 5px;
+    }
+
+    tr:nth-child(even) {
+      background-color: rgb(242, 242, 242);
+    }
+
+    tr:nth-child(odd) {
+      background-color: #f0dc82;
+    }
+
+    tr:hover {
+      background-color: #ddd;
+    }
+
+    .fa-trash-can {
+      color: red;
+    }
+
+    #container {
+      width: 100%;
+      max-width: 1600px;
+      margin: auto;
+      padding-left: 2%;
+      padding-right: 2%;
+      min-height: 100vh;
+      background-color: rgb(240, 240, 240);
+    }
+
+    h1 {
+		color: #CC231E;
+      margin: 0;
+      padding: 0
+    }
+
+  .fa-x { color:red }
+.fa-check,.fa-cart-plus { color:#0A5C36 }
+
+
