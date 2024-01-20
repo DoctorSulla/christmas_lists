@@ -90,10 +90,10 @@ pub async fn auth<B>(
         Some(cookie) => cookie.to_str().unwrap().to_string(),
         None => "".to_string(),
     };
-    let cookies: Vec<&str> = cookies_header.split(";").collect();
+    let cookies: Vec<&str> = cookies_header.split(';').collect();
     let mut auth_cookie = "";
     for cookie in cookies.iter() {
-        let kv: Vec<&str> = cookie.split("=").collect();
+        let kv: Vec<&str> = cookie.split('=').collect();
         if kv[0] == "auth_token" {
             auth_cookie = kv[1];
         }

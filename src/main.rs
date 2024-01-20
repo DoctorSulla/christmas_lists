@@ -10,7 +10,7 @@ use sqlx::{
 
 use std::env;
 
-use axum_server;
+//use axum_server;
 //use axum_server::tls_rustls::RustlsConfig;
 use std::net::SocketAddr;
 
@@ -87,6 +87,7 @@ async fn main() {
     };
 
     let protected_routes = Router::new()
+        .route("/", get(route_handlers::get_home))
         .route("/item", post(route_handlers::add_item))
         .route("/item/:item_id", delete(route_handlers::delete_item))
         .route("/item/:item_id", patch(route_handlers::allocate_item))

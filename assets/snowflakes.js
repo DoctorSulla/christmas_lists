@@ -14,10 +14,8 @@ deleteSnowflakes = function () {
   }
 };
 
-createSnowflakes = function () {
-  for (i = 0; i < snowflakeCount; i++) {
+createSnowflakes = function ()   for (i = 0; i < snowflakeCount; i++) {
     generateSnowflake(true);
-  }
 };
 
 document.addEventListener("DOMContentLoaded", () => {

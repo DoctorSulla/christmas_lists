@@ -74,7 +74,7 @@ pub async fn load_file(
         true => body = fs::read(&file_path).unwrap(),
         false => {
             let not_found_path = format!("{}{}", state.file_path, "404.html");
-            body = fs::read(&not_found_path).unwrap();
+            body = fs::read(not_found_path).unwrap();
             status_code = StatusCode::NOT_FOUND;
         }
     }
@@ -87,8 +87,21 @@ pub async fn load_file(
 
 pub async fn not_found(State(state): State<AppState>) -> Response<Full<Bytes>> {
     let not_found_path = format!("{}{}", state.file_path, "404.html");
-    let body = fs::read(&not_found_path).unwrap();
+    let body = fs::read(not_found_path).unwrap();
     let status_code = StatusCode::NOT_FOUND;
+    let mime_type = "text/html";
+
+    Response::builder()
+        .status(status_code)
+        .header("Content-Type", mime_type)
+        .body(Full::from(body))
+        .unwrap()
+}
+
+pub async fn get_home(State(state): State<AppState>) -> Response<Full<Bytes>> {
+    let home_path = format!("{}{}", state.file_path, "index.html");
+    let body = fs::read(home_path).unwrap();
+    let status_code = StatusCode::OK;
     let mime_type = "text/html";
 
     Response::builder()
@@ -241,24 +254,22 @@ pub async fn get_items(
     let mut row_count = 0;
     while let Some(row) = presents.try_next().await.unwrap() {
         row_count += 1;
-        let taken: String;
-        if row.taken {
-            taken = "<i class='fa-regular fa-check'></i>".to_string();
+        let taken: String = if row.taken {
+            "<i class='fa-regular fa-check'></i>".to_string()
         } else {
-            taken = "<i class='fa-regular fa-x'></i>".to_string();
-        }
+            "<i class='fa-regular fa-x'></i>".to_string()
+        };
         if user_id == requested_user_id {
             res = format!(
                 "{}<tr><td><a href='{}'>{}</a></td><td>{}</td><td>{}</td><td><a href='#' hx-target='closest tr' hx-swap='outerHTML' hx-delete='./item/{}' hx-confirm='Please confirm you wish to delete {} from your list'><i class=\"fa-duotone fa-trash-can\"></i></a></td></tr>\n",
                 res, encode_text(&row.url), encode_text(&row.name), encode_text(&row.price), taken,row.id,encode_text(&row.name)
             );
         } else {
-            let buying_it_text: String;
-            if row.taken {
-                buying_it_text = "".to_string();
+            let buying_it_text: String = if row.taken {
+                "".to_string()
             } else {
-                buying_it_text = "<i class='fa-sharp fa-solid fa-cart-plus'></i>".to_string();
-            }
+                "<i class='fa-sharp fa-solid fa-cart-plus'></i>".to_string()
+            };
             res = format!(
                 "{}<tr><td><a href='{}'>{}</a></td><td>{}</td><td>{}</td><td>{}</td><td><a hx-patch='./item/{}' hx-confirm='Please confirm you are buying or have bought {}' hx-target='closest tr' href='#'>{}</a></td></tr>\n",
                 res, encode_text(&row.url), encode_text(&row.name), encode_text(&row.price), taken, encode_text(&row.taken_by_name.unwrap_or_default()),row.id,encode_text(&row.name), buying_it_text
@@ -268,9 +279,9 @@ pub async fn get_items(
     res.push_str("</tbody></table>");
     if row_count == 0 {
         if user_id != requested_user_id {
-            res = format!("<p>This person's list is currently empty.</p>");
+            res = "<p>This person's list is currently empty.</p>".to_string();
         } else {
-            res = format!("<p>You have no items in your list, try adding some below.</p>");
+            res = "<p>You have no items in your list, try adding some below.</p>".to_string();
         }
     }
     (response_headers, Html(res))
