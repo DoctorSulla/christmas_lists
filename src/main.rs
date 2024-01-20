@@ -41,7 +41,7 @@ async fn main() {
     match environment {
         Ok(i) => match i.as_str() {
             "PRODUCTION" => {
-                addr = SocketAddr::from(([0, 0, 0, 0], 80));
+                addr = SocketAddr::from(([0, 0, 0, 0], 443));
                 file_path = "/app/christmas_lists/assets/".to_string();
             }
             "TEST" => {
@@ -76,10 +76,13 @@ async fn main() {
     // Create tables
     tables::create(pool.clone()).await;
 
-    // Create TLS Config
-    // let config = RustlsConfig::from_pem_file("./certs/cert.pem", "./certs/key.pem")
-    //     .await
-    //     .unwrap();
+    //Create TLS Config
+    // let config = RustlsConfig::from_pem_file(
+    //     "/etc/christmaslist/live/christmaslist.xyz/fullchain.pem",
+    //     "/etc/christmaslist/live/christmaslist.xyz/privkey.pem",
+    // )
+    // .await
+    // .expect("Failed to create TLS config");
 
     let app_state: AppState = AppState {
         connection_pool: pool,
