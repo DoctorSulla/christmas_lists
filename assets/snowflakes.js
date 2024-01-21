@@ -14,8 +14,10 @@ deleteSnowflakes = function () {
   }
 };
 
-createSnowflakes = function ()   for (i = 0; i < snowflakeCount; i++) {
+createSnowflakes = function () {
+  for (i = 0; i < snowflakeCount; i++) {
     generateSnowflake(true);
+  }
 };
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -31,9 +33,13 @@ function generateInitialPosition(pageLoad = false) {
   if (pageLoad) {
     initialVerticalOffset = Math.floor(Math.random() * window.innerHeight);
   } else {
-    initialVerticalOffset = Math.floor(Math.random() * window.innerHeight / 6);
+    initialVerticalOffset = Math.floor(
+      Math.random() * window.innerHeight / 6,
+    );
   }
-  const initialHorizontalOffset = Math.floor(Math.random() * window.innerWidth);
+  const initialHorizontalOffset = Math.floor(
+    Math.random() * window.innerWidth,
+  );
   return {
     top: initialVerticalOffset + "px",
     left: initialHorizontalOffset + "px",
@@ -70,7 +76,8 @@ animate = function (timestamp) {
     }
     // Vertical movement
     flake.style.top = parseInt(flake.dataset.starty, 10) +
-      Math.floor((timestamp - flake.dataset.startTime) / verticalSpeed) + "px";
+      Math.floor((timestamp - flake.dataset.startTime) / verticalSpeed) +
+      "px";
     if (parseInt(flake.style.top, 10) > window.innerHeight) {
       flake.remove();
       generateSnowflake();
