@@ -4,6 +4,7 @@
 <head>
   <title>Halliday Christmas Lists</title>
 
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="./main.css">
 
   <script src="https://unpkg.com/htmx.org@1.9.8"
@@ -13,13 +14,14 @@
 
   <script>
     document.addEventListener("showAddForm", function () {
-      document.getElementById("add-form").style.display = "block";
+      document.getElementById("add-form-container").style.display = "block";
     })
 
     document.addEventListener("hideAddForm", function () {
-      document.getElementById("add-form").style.display = "none";
+      document.getElementById("add-form-container").style.display = "none";
     })
   </script>
+  <script src="./snowflakes.js"></script>
 </head>
 
 <body>
