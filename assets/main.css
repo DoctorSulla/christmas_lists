@@ -14,6 +14,8 @@ html,
       font-size: 16px
     }
 
+    h1 { font-family: mutkdaMedium }
+
     #add-form {
       margin: 15px 0;
     }
@@ -23,10 +25,10 @@ html,
     }
 
     table {
-      table-layout: fixed;
+      table-layout: auto;
       min-width: 360px;
       max-width: 1000px;
-      width: 100%;
+      width: 96%;
       overflow-x: auto;
     }
 
@@ -97,5 +99,18 @@ html,
 
   .fa-x { color:red }
 .fa-check,.fa-cart-plus { color:#0A5C36 }
+
+@media only screen and (max-width: 480px) {
+  th.taken-by, td.taken-by {
+  display:none
+  }
+}
+
+@font-face {
+  font-family: muktaMedium;
+  src: url("./Mukta-Medium.ttf");
+}
+
+
 
 

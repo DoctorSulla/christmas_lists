@@ -20,6 +20,21 @@
     document.addEventListener("hideAddForm", function () {
       document.getElementById("add-form-container").style.display = "none";
     })
+
+    document.addEventListener("noPresents", function () {
+      document.getElementById("list-table").style.display = "none";
+      if (document.querySelector("no-presents") != null) {
+        document.querySelector("no-presents").style.display = "block";
+      }
+    })
+
+    document.addEventListener("somePresents", function () {
+      document.getElementById("list-table").style.display = "table";
+      if (document.querySelector("no-presents") != null) {
+        document.querySelector("no-presents").style.display = "none";
+      }
+    })
+
   </script>
   <script src="./snowflakes.js"></script>
 </head>

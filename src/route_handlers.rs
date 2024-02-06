@@ -65,6 +65,13 @@ pub async fn load_file(
         "jpg" | "jpeg" => "image/jpeg",
         "webp" => "image/webp",
         "css" => "text/css",
+        "ttf" => "application/font-ttf",
+        "woff" => "application/font-woff",
+        "svg" => "image/svg+xml",
+        "png" => "image/png",
+        "gif" => "image/gif",
+        "ico" => "image/x-icon",
+        "svgz" => "image/svg+xml",
         _default => "text/html",
     };
 
@@ -171,8 +178,9 @@ pub async fn add_item(
     State(state): State<AppState>,
     headers: HeaderMap,
     Form(form_data): Form<Item>,
-) -> Html<String> {
+) -> (HeaderMap, Html<String>) {
     let user_id = utilities::get_user_id_from_header(headers);
+    let mut response_headers = HeaderMap::new();
 
     let new_row = sqlx::query(
         "INSERT INTO presents (user_id,name,url,price,taken) values(?,?,?,?,false) RETURNING id",
@@ -185,10 +193,12 @@ pub async fn add_item(
     .await
     .expect("Failed to add item to list.");
 
+    response_headers.insert("HX-Trigger-After-Swap", "somePresents".parse().unwrap());
+
     let created_id: i32 = new_row.try_get("id").unwrap();
 
-    Html(format!("<tr><td><a href='{}'>{}</a></td><td>{}</td><td>{}</td><td><a href='#' hx-delete='./item/{}' hx-target='closest tr' hx-swap='outerHTML' hx-confirm='Please confirm you wish to delete {} from your list'><i class=\"fa-duotone fa-trash-can\"></i></a></td></tr>\n",
-                form_data.url, form_data.name, utilities::format_currency(form_data.price),false,created_id,form_data.name))
+    (response_headers,Html(format!("<tr><td><a href='{}'>{}</a></td><td>{}</td><td><i class='fa-regular fa-x'></i></td><td><a href='#' hx-delete='./item/{}' hx-target='closest tr' hx-swap='outerHTML' hx-confirm='Please confirm you wish to delete {} from your list'><i class=\"fa-duotone fa-trash-can\"></i></a></td></tr>\n",
+                form_data.url, form_data.name, utilities::format_currency(form_data.price),created_id,form_data.name)))
 }
 
 pub async fn delete_item(
@@ -248,7 +258,7 @@ pub async fn get_items(
     } else {
         response_headers.insert("HX-Trigger", "hideAddForm".parse().unwrap());
         res.push_str(
-            "<thead><th>Name</th><th>Price</th><th>Taken</th><th>Taken by</th><th>Action</th></tr></thead>\n",
+            "<thead><th>Name</th><th>Price</th><th>Taken</th><th class='taken-by'>Taken by</th><th>Action</th></tr></thead>\n",
         );
     }
     let mut row_count = 0;
@@ -271,18 +281,23 @@ pub async fn get_items(
                 "<i class='fa-sharp fa-solid fa-cart-plus'></i>".to_string()
             };
             res = format!(
-                "{}<tr><td><a href='{}'>{}</a></td><td>{}</td><td>{}</td><td>{}</td><td><a hx-patch='./item/{}' hx-confirm='Please confirm you are buying or have bought {}' hx-target='closest tr' href='#'>{}</a></td></tr>\n",
+                "{}<tr><td><a href='{}'>{}</a></td><td>{}</td><td>{}</td><td class='taken-by'>{}</td><td><a hx-patch='./item/{}' hx-confirm='Please confirm you are buying or have bought {}' hx-target='closest tr' href='#'>{}</a></td></tr>\n",
                 res, encode_text(&row.url), encode_text(&row.name), encode_text(&row.price), taken, encode_text(&row.taken_by_name.unwrap_or_default()),row.id,encode_text(&row.name), buying_it_text
             );
         }
     }
     res.push_str("</tbody></table>");
     if row_count == 0 {
+        response_headers.insert("HX-Trigger-After-Swap", "noPresents".parse().unwrap());
         if user_id != requested_user_id {
-            res = "<p>This person's list is currently empty.</p>".to_string();
+            res.push_str("<p class='no-presents'>This person's list is currently empty.</p>");
         } else {
-            res = "<p>You have no items in your list, try adding some below.</p>".to_string();
+            res.push_str(
+                "<p class='no-presents'>You have no items in your list, try adding some below.</p>",
+            );
         }
+    } else {
+        response_headers.insert("HX-Trigger-After-Swap", "somePresents".parse().unwrap());
     }
     (response_headers, Html(res))
 }
@@ -294,10 +309,10 @@ pub async fn get_users(State(state): State<AppState>, headers: HeaderMap) -> Htm
     )
     .await
     .expect("Unable to fetch user");
-    let mut users_list = String::from("<select hx-target='#items' hx-get='./items/' hx-on='htmx:configRequest: event.detail.path += this.value' id='users-list' name='users-list'>");
-    users_list = format!(
-        "{}<option value='{}'>Your list</option>",
-        users_list, calling_user.id
+
+    let mut users_list = format!(
+        "<select hx-target='#items' hx-get='./items/' hx-on='htmx:configRequest: event.detail.path += this.value' id='users-list' name='users-list'><option value='{}'>Your list</option>",
+        calling_user.id
     );
     let mut rows = sqlx::query("SELECT username,id FROM users ORDER by username ASC")
         .fetch(&state.connection_pool);

@@ -2,7 +2,7 @@ generateRange = function (min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 };
 
-const snowflakeCount = Math.floor(window.innerWidth / 30);
+const snowflakeCount = Math.floor(window.innerWidth / 50);
 // Lower is faster
 const verticalSpeed = 8;
 const horizontalAdjustmentRange = 2;
