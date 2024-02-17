@@ -14,6 +14,8 @@ use std::env;
 //use axum_server::tls_rustls::RustlsConfig;
 use std::net::SocketAddr;
 
+use tower_http::services::{ServeDir, ServeFile};
+
 pub mod auth_and_login;
 pub mod route_handlers;
 pub mod tables;
@@ -22,7 +24,6 @@ pub mod utilities;
 #[derive(Clone)]
 pub struct AppState {
     connection_pool: SqlitePool,
-    file_path: String,
 }
 
 #[derive(Clone, sqlx::FromRow, Debug)]
@@ -84,18 +85,19 @@ async fn main() {
     // .await
     // .expect("Failed to create TLS config");
 
+    let serve_dir = ServeDir::new(file_path).not_found_service(ServeFile::new("assets/404.html"));
+
     let app_state: AppState = AppState {
         connection_pool: pool,
-        file_path: file_path.clone(),
     };
 
     let protected_routes = Router::new()
-        .route("/", get(route_handlers::get_home))
         .route("/item", post(route_handlers::add_item))
         .route("/item/:item_id", delete(route_handlers::delete_item))
         .route("/item/:item_id", patch(route_handlers::allocate_item))
         .route("/items/:user_id", get(route_handlers::get_items))
         .route("/items/", get(route_handlers::get_items))
+        .route("/password", patch(route_handlers::update_password))
         .route("/users", get(route_handlers::get_users))
         .route_layer(middleware::map_request_with_state(
             app_state.clone(),
@@ -103,10 +105,10 @@ async fn main() {
         ));
 
     let open_routes = Router::new()
-        .route("/:file_name", get(route_handlers::load_file))
+        //.route("/:file_name", get(route_handlers::load_file))
         .route("/login", post(route_handlers::process_login))
         .route("/register", post(route_handlers::register))
-        .fallback(route_handlers::not_found);
+        .nest_service("/", serve_dir.clone());
 
     let app = Router::new()
         .merge(protected_routes)

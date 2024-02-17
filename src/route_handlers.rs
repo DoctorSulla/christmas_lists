@@ -1,16 +1,13 @@
 use crate::{auth_and_login, utilities, AppState};
 use axum::{
-    body::Bytes,
     extract::{Form, Path, State},
     http::{HeaderMap, StatusCode},
-    response::{Html, Response},
+    response::Html,
 };
 use futures::TryStreamExt;
 use html_escape::encode_text;
-use http_body_util::Full;
 use serde::{Deserialize, Serialize};
 use sqlx::Row;
-use std::fs;
 
 #[derive(Serialize, Deserialize)]
 pub struct Item {
@@ -51,71 +48,11 @@ pub struct AllocateItemRequest {
     pub item_id: i32,
 }
 
-// Serve a static file
-pub async fn load_file(
-    State(state): State<AppState>,
-    Path(file_name): Path<String>,
-) -> Response<Full<Bytes>> {
-    let file_path = format!("{}{}", state.file_path, file_name);
-    let parts: Vec<&str> = file_name.split('.').collect();
-    let file_extension = parts[parts.len() - 1].to_lowercase();
-    let mime_type = match file_extension.as_str() {
-        "html" => "text/html",
-        "js" => "text/javascript",
-        "jpg" | "jpeg" => "image/jpeg",
-        "webp" => "image/webp",
-        "css" => "text/css",
-        "ttf" => "application/font-ttf",
-        "woff" => "application/font-woff",
-        "svg" => "image/svg+xml",
-        "png" => "image/png",
-        "gif" => "image/gif",
-        "ico" => "image/x-icon",
-        "svgz" => "image/svg+xml",
-        _default => "text/html",
-    };
-
-    let mut status_code = StatusCode::OK;
-    let body: Vec<u8>;
-    match std::path::Path::new(&file_path).exists() {
-        true => body = fs::read(&file_path).unwrap(),
-        false => {
-            let not_found_path = format!("{}{}", state.file_path, "404.html");
-            body = fs::read(not_found_path).unwrap();
-            status_code = StatusCode::NOT_FOUND;
-        }
-    }
-    Response::builder()
-        .status(status_code)
-        .header("Content-Type", mime_type)
-        .body(Full::from(body))
-        .unwrap()
-}
-
-pub async fn not_found(State(state): State<AppState>) -> Response<Full<Bytes>> {
-    let not_found_path = format!("{}{}", state.file_path, "404.html");
-    let body = fs::read(not_found_path).unwrap();
-    let status_code = StatusCode::NOT_FOUND;
-    let mime_type = "text/html";
-
-    Response::builder()
-        .status(status_code)
-        .header("Content-Type", mime_type)
-        .body(Full::from(body))
-        .unwrap()
-}
-
-pub async fn get_home(State(state): State<AppState>) -> Response<Full<Bytes>> {
-    let home_path = format!("{}{}", state.file_path, "index.html");
-    let body = fs::read(home_path).unwrap();
-    let status_code = StatusCode::OK;
-    let mime_type = "text/html";
-
-    Response::builder()
-        .status(status_code)
-        .header("Content-Type", mime_type)
-        .body(Full::from(body))
-        .unwrap()
+#[derive(Serialize, Deserialize)]
+pub struct UpdatePasswordRequest {
+    pub current_password: String,
+    pub password: String,
+    pub confirm_password: String,
 }
 
 pub async fn process_login(
@@ -339,7 +276,6 @@ pub async fn allocate_item(
     allocated_item: Path<AllocateItemRequest>,
     headers: HeaderMap,
 ) -> Html<String> {
-    println!("Trying to allocate item");
     let user_id = utilities::get_user_id_from_header(headers);
     let user = auth_and_login::get_user(user_id, state.connection_pool.clone())
         .await
@@ -361,4 +297,21 @@ pub async fn allocate_item(
         "<td><a href='{}'>{}</a></td><td>{}</td><td><i class='fa-regular fa-check'></i></td><td>{}</td><td></td>",
         url, name, price, user.username
     ))
+}
+
+pub async fn update_password(
+    State(_state): State<AppState>,
+    _headers: HeaderMap,
+    Form(request): Form<UpdatePasswordRequest>,
+) -> (StatusCode, Html<String>) {
+    let password = request.password;
+    let confirm_password = request.confirm_password;
+    if password != confirm_password {
+        return (
+            StatusCode::UNPROCESSABLE_ENTITY,
+            Html("Your passwords must match".to_string()),
+        );
+    }
+    let _existing_password = request.current_password;
+    (StatusCode::OK, Html("".to_string()))
 }
