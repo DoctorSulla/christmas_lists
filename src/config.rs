@@ -20,15 +20,15 @@ pub fn get_app_config<'a>() -> AppConfig<'a> {
             },
             "TEST" => AppConfig {
                 addr: SocketAddr::from(([127, 0, 0, 1], 3000)),
-                file_path: "/assets",
-                use_tls: true,
+                file_path: "./assets",
+                use_tls: false,
             },
             _ => {
                 println!("Please set APP_ENVIRONMENT variable to either PRODUCTION or TEST");
                 AppConfig {
                     addr: SocketAddr::from(([127, 0, 0, 1], 3000)),
-                    file_path: "/assets",
-                    use_tls: true,
+                    file_path: "./assets",
+                    use_tls: false,
                 }
             }
         },
@@ -36,8 +36,8 @@ pub fn get_app_config<'a>() -> AppConfig<'a> {
             println!("Please set APP_ENVIRONMENT variable to either PRODUCTION or TEST");
             AppConfig {
                 addr: SocketAddr::from(([127, 0, 0, 1], 3000)),
-                file_path: "/assets",
-                use_tls: true,
+                file_path: "./assets",
+                use_tls: false,
             }
         }
     }
