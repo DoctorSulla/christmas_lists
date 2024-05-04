@@ -1,4 +1,4 @@
-use crate::{utilities, AppState, User};
+use crate::{utilities, AppState};
 use axum::{
     extract::State,
     http::{Request, StatusCode},
@@ -18,6 +18,12 @@ use argon2::{
 pub struct LoginRequest {
     pub username: String,
     pub password: String,
+}
+
+#[derive(Clone, sqlx::FromRow, Debug)]
+pub struct User {
+    pub id: i32,
+    pub username: String,
 }
 
 // Verify the username and password match stored credentials and return the user if so

@@ -21,12 +21,6 @@ pub struct AppState {
     connection_pool: SqlitePool,
 }
 
-#[derive(Clone, sqlx::FromRow, Debug)]
-pub struct User {
-    id: i32,
-    username: String,
-}
-
 #[tokio::main]
 async fn main() {
     let app_config: config::AppConfig = config::get_app_config();

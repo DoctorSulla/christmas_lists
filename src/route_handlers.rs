@@ -1,3 +1,4 @@
+use crate::auth_and_login::User;
 use crate::{auth_and_login, utilities, AppState};
 use axum::{
     extract::{Form, Path, State},
@@ -240,7 +241,7 @@ pub async fn get_items(
 }
 
 pub async fn get_users(State(state): State<AppState>, headers: HeaderMap) -> Html<String> {
-    let calling_user: crate::User = auth_and_login::get_user(
+    let calling_user: User = auth_and_login::get_user(
         utilities::get_user_id_from_header(headers),
         state.connection_pool.to_owned(),
     )
