@@ -4,7 +4,6 @@ use sqlx::{
     SqlitePool,
 };
 
-use axum_server;
 use axum_server::tls_rustls::RustlsConfig;
 
 use tower_http::services::{ServeDir, ServeFile};

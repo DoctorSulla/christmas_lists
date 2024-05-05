@@ -109,9 +109,7 @@ pub async fn auth<B>(
             request
                 .headers_mut()
                 .insert("username", user.username.parse().unwrap());
-            request
-                .headers_mut()
-                .insert("user-id", user.id.try_into().unwrap());
+            request.headers_mut().insert("user-id", user.id.into());
 
             Ok(request)
         }
