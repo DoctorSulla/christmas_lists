@@ -17,8 +17,10 @@ pub async fn create(pool: SqlitePool) {
     sqlx::query(
         "CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT, 
-            username VARCHAR(30) UNIQUE, 
-            hashed_password VARCHAR(200))
+            username VARCHAR(30) UNIQUE,
+            email VARCHAR(100) UNIQUE,
+            hashed_password VARCHAR(200),
+            active INTEGER)
         ",
     )
     .execute(&pool)
