@@ -62,17 +62,13 @@ pub async fn verify_login(username: &str, password: &str, pool: SqlitePool) -> O
 pub async fn validate_cookie(cookie_value: String, pool: SqlitePool) -> Option<User> {
     let current_time: i64 = utilities::get_epoch_time();
 
-    let query = match sqlx::query(
-        "SELECT * FROM auth_tokens WHERE token =? AND expiry > ? and revoked=false",
-    )
-    .bind(cookie_value)
-    .bind(current_time)
-    .fetch_optional(&pool)
-    .await
-    {
-        Ok(value) => value,
-        Err(_e) => None,
-    };
+    let query =
+        sqlx::query("SELECT * FROM auth_tokens WHERE token =? AND expiry > ? and revoked=false")
+            .bind(cookie_value)
+            .bind(current_time)
+            .fetch_optional(&pool)
+            .await
+            .unwrap_or_default();
 
     if let Some(query) = query {
         let user_id: i32 = query
