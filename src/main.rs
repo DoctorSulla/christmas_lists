@@ -1,4 +1,12 @@
+use anyhow::Error;
 use axum::{middleware, Router};
+use lettre::{
+    transport::smtp::{
+        authentication::{Credentials, Mechanism},
+        PoolConfig,
+    },
+    Message, SmtpTransport, Transport,
+};
 use sqlx::{
     sqlite::{SqliteConnectOptions, SqlitePoolOptions},
     SqlitePool,
@@ -18,6 +26,29 @@ pub mod utilities;
 #[derive(Clone)]
 pub struct AppState {
     connection_pool: SqlitePool,
+}
+
+fn _send_email(from: &str, to: &str, subject: &str, body: &str) -> Result<(), Error> {
+    let email = Message::builder()
+        .from(from.parse()?)
+        .reply_to(from.parse()?)
+        .to(to.parse()?)
+        .subject(subject)
+        .body(String::from(body))?;
+
+    // Create TLS transport on port 587 with STARTTLS
+    let sender = SmtpTransport::starttls_relay("mail.halliday.nz")?
+        // Add credentials for authentication
+        .credentials(Credentials::new("management".to_owned(), "".to_owned()))
+        // Configure expected authentication mechanism
+        .authentication(vec![Mechanism::Plain])
+        // Connection pool settings
+        .pool_config(PoolConfig::new().max_size(20))
+        .build();
+
+    // Send the email via remote relay
+    let _result = sender.send(&email)?;
+    Ok(())
 }
 
 #[tokio::main]
