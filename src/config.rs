@@ -5,7 +5,6 @@ use std::env;
 pub struct AppConfig<'a> {
     pub addr: SocketAddr,
     pub file_path: &'a str,
-    pub use_tls: bool,
 }
 
 pub fn get_app_config<'a>() -> AppConfig<'a> {
@@ -14,21 +13,18 @@ pub fn get_app_config<'a>() -> AppConfig<'a> {
     match environment {
         Ok(i) => match i.as_str() {
             "PRODUCTION" => AppConfig {
-                addr: SocketAddr::from(([0, 0, 0, 0], 443)),
-                file_path: "/app/christmas_lists/assets",
-                use_tls: true,
+                addr: SocketAddr::from(([127, 0, 0, 1], 3003)),
+                file_path: "/srv/http/christmaslist.xyz/assets",
             },
             "TEST" => AppConfig {
                 addr: SocketAddr::from(([127, 0, 0, 1], 3000)),
                 file_path: "./assets",
-                use_tls: false,
             },
             _ => {
                 println!("Please set APP_ENVIRONMENT variable to either PRODUCTION or TEST");
                 AppConfig {
                     addr: SocketAddr::from(([127, 0, 0, 1], 3000)),
                     file_path: "./assets",
-                    use_tls: false,
                 }
             }
         },
@@ -37,7 +33,6 @@ pub fn get_app_config<'a>() -> AppConfig<'a> {
             AppConfig {
                 addr: SocketAddr::from(([127, 0, 0, 1], 3000)),
                 file_path: "./assets",
-                use_tls: false,
             }
         }
     }

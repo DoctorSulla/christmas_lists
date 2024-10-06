@@ -12,8 +12,6 @@ use sqlx::{
     SqlitePool,
 };
 
-use axum_server::tls_rustls::RustlsConfig;
-
 use tower_http::services::{ServeDir, ServeFile};
 
 pub mod auth_and_login;
@@ -88,23 +86,8 @@ async fn main() {
         .merge(open_routes)
         .with_state(app_state);
 
-    if app_config.use_tls {
-        //Create TLS Config
-        let tls_config = RustlsConfig::from_pem_file(
-            "/etc/christmaslist/live/christmaslist.xyz/fullchain.pem",
-            "/etc/christmaslist/live/christmaslist.xyz/privkey.pem",
-        )
+    axum_server::bind(app_config.addr)
+        .serve(app.into_make_service())
         .await
-        .expect("Failed to create TLS config");
-
-        axum_server::bind_rustls(app_config.addr, tls_config)
-            .serve(app.into_make_service())
-            .await
-            .unwrap();
-    } else {
-        axum_server::bind(app_config.addr)
-            .serve(app.into_make_service())
-            .await
-            .unwrap();
-    }
+        .unwrap();
 }

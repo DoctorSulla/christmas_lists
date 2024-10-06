@@ -20,7 +20,7 @@ pub async fn create(pool: SqlitePool) {
             username VARCHAR(30) UNIQUE,
             email VARCHAR(100) UNIQUE,
             hashed_password VARCHAR(200),
-            active INTEGER)
+            active INTEGER DEFAULT 0)
         ",
     )
     .execute(&pool)

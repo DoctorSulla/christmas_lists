@@ -29,8 +29,10 @@ pub struct GetItemsRequest {
 
 #[derive(Serialize, Deserialize)]
 pub struct RegistrationRequest {
+    pub email: String,
     pub username: String,
     pub password: String,
+    pub confirm_password: String,
 }
 
 #[derive(Serialize, Deserialize, sqlx::FromRow)]
@@ -104,7 +106,11 @@ pub async fn process_login(
 }
 
 pub async fn register(State(state): State<AppState>, Form(form_data): Form<RegistrationRequest>) {
-    sqlx::query("INSERT INTO users(username,hashed_password) values(?,?)")
+    if form_data.password != form_data.confirm_password {
+        panic!("Passwords do not match");
+    }
+    sqlx::query("INSERT INTO users(email,username,hashed_password) values(?,?,?)")
+        .bind(form_data.email)
         .bind(form_data.username)
         .bind(auth_and_login::hash_password(form_data.password))
         .execute(&state.connection_pool)
