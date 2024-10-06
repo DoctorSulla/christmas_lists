@@ -86,8 +86,9 @@ async fn main() {
         .merge(open_routes)
         .with_state(app_state);
 
-    axum_server::bind(app_config.addr)
-        .serve(app.into_make_service())
+    let listener = tokio::net::TcpListener::bind(app_config.addr)
         .await
         .unwrap();
+
+    axum::serve(listener, app).await.unwrap();
 }
