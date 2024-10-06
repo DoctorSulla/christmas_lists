@@ -67,9 +67,9 @@ async fn main() {
 
     // Create tables
     tables::create(pool.clone()).await;
-
+    let four_o_four = format!("{}/404.html", app_config.file_path);
     let serve_dir =
-        ServeDir::new(app_config.file_path).not_found_service(ServeFile::new("assets/404.html"));
+        ServeDir::new(app_config.file_path).not_found_service(ServeFile::new(four_o_four));
 
     let app_state: AppState = AppState {
         connection_pool: pool,
