@@ -105,7 +105,7 @@ pub async fn process_login(
     (headers, Html(response_html))
 }
 
-pub async fn register(State(state): State<AppState>, Form(form_data): Form<RegistrationRequest>) {
+pub async fn _register(State(state): State<AppState>, Form(form_data): Form<RegistrationRequest>) {
     if form_data.password != form_data.confirm_password {
         panic!("Passwords do not match");
     }
