@@ -77,8 +77,18 @@ html,
       background-color: #ddd;
     }
 
-    .fa-trash-can {
-      color: red;
+    svg.fa-trash-can {
+      color:black
+    }
+
+    svg.fa-trash-can:hover { color:red }
+
+    svg.fa-sharp-solid-gift-circle-plus {
+      color:black
+    }
+
+    svg.fa-sharp-solid-gift-circle-plus:hover {
+      color:green
     }
 
     #container {

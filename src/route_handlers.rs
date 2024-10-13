@@ -215,7 +215,7 @@ pub async fn get_items(
         };
         if user_id == requested_user_id {
             res = format!(
-                "{}<tr><td><a href='{}'>{}</a></td><td>{}</td><td>{}</td><td><a href='#' hx-target='closest tr' hx-swap='outerHTML' hx-delete='./item/{}' hx-confirm='Please confirm you wish to delete {} from your list'><i class=\"fa-duotone fa-trash-can\"></i></a></td></tr>\n",
+                "{}<tr><td><a href='{}'>{}</a></td><td>{}</td><td style='text-align:center'>{}</td><td><a href='#' hx-target='closest tr' hx-swap='outerHTML' hx-delete='./item/{}' hx-confirm='Please confirm you wish to delete {} from your list'><i class=\"fa-duotone fa-trash-can\"></i></a></td></tr>\n",
                 res, encode_text(&row.url), encode_text(&row.name), encode_text(&row.price), taken,row.id,encode_text(&row.name)
             );
         } else {
