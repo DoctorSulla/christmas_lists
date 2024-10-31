@@ -105,18 +105,18 @@ pub async fn process_login(
     (headers, Html(response_html))
 }
 
-pub async fn _register(State(state): State<AppState>, Form(form_data): Form<RegistrationRequest>) {
-    if form_data.password != form_data.confirm_password {
-        panic!("Passwords do not match");
-    }
-    sqlx::query("INSERT INTO users(email,username,hashed_password) values(?,?,?)")
-        .bind(form_data.email)
-        .bind(form_data.username)
-        .bind(auth_and_login::hash_password(form_data.password))
-        .execute(&state.connection_pool)
-        .await
-        .expect("Failed to create registration");
-}
+// pub async fn register(State(state): State<AppState>, Form(form_data): Form<RegistrationRequest>) {
+//     if form_data.password != form_data.confirm_password {
+//         panic!("Passwords do not match");
+//     }
+//     sqlx::query("INSERT INTO users(email,username,hashed_password) values(?,?,?)")
+//         .bind(form_data.email)
+//         .bind(form_data.username)
+//         .bind(auth_and_login::hash_password(form_data.password))
+//         .execute(&state.connection_pool)
+//         .await
+//         .expect("Failed to create registration");
+// }
 
 pub async fn add_item(
     State(state): State<AppState>,
@@ -141,7 +141,7 @@ pub async fn add_item(
 
     let created_id: i32 = new_row.try_get("id").unwrap();
 
-    (response_headers,Html(format!("<tr><td><a href='{}'>{}</a></td><td>{}</td><td><i class='fa-regular fa-x'></i></td><td><a href='#' hx-delete='./item/{}' hx-target='closest tr' hx-swap='outerHTML' hx-confirm='Please confirm you wish to delete {} from your list'><i class=\"fa-duotone fa-trash-can\"></i></a></td></tr>\n",
+    (response_headers,Html(format!("<tr><td><a href='{}'>{}</a></td><td>{}</td><td style='text'align:center'><i class='fa-regular fa-x'></i></td><td><a href='#' hx-delete='./item/{}' hx-target='closest tr' hx-swap='outerHTML' hx-confirm='Please confirm you wish to delete {} from your list'><i class=\"fa-duotone fa-trash-can\"></i></a></td></tr>\n",
                 form_data.url, form_data.name, utilities::format_currency(form_data.price),created_id,form_data.name)))
 }
 
@@ -225,7 +225,7 @@ pub async fn get_items(
                 "<i class='fa-sharp fa-solid fa-cart-plus'></i>".to_string()
             };
             res = format!(
-                "{}<tr><td><a href='{}'>{}</a></td><td>{}</td><td>{}</td><td class='taken-by'>{}</td><td><a hx-patch='./item/{}' hx-confirm='Please confirm you are buying or have bought {}' hx-target='closest tr' href='#'>{}</a></td></tr>\n",
+                "{}<tr><td><a href='{}'>{}</a></td><td>{}</td><td style='text-align:center'>{}</td><td class='taken-by'>{}</td><td><a hx-patch='./item/{}' hx-confirm='Please confirm you are buying or have bought {}' hx-target='closest tr' href='#'>{}</a></td></tr>\n",
                 res, encode_text(&row.url), encode_text(&row.name), encode_text(&row.price), taken, encode_text(&row.taken_by_name.unwrap_or_default()),row.id,encode_text(&row.name), buying_it_text
             );
         }

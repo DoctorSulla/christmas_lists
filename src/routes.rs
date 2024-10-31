@@ -15,5 +15,5 @@ pub fn get_protected_routes() -> Router<AppState> {
 
 pub fn get_open_routes() -> Router<AppState> {
     Router::new().route("/login", post(route_handlers::process_login))
-    //.route("/register", post(route_handlers::register))
+    // .route("/register", post(route_handlers::register))
 }
