@@ -29,18 +29,19 @@ pub struct User {
 // Verify the username and password match stored credentials and return the user if so
 pub async fn verify_login(username: &str, password: &str, pool: SqlitePool) -> Option<User> {
     // Get hashed password from the database
-    let query =
-        match sqlx::query("SELECT id,hashed_password FROM users WHERE username=? AND active=1")
-            .bind(username)
-            .fetch_optional(&pool)
-            .await
-        {
-            Ok(result) => match result {
-                Some(row) => row,
-                None => return None,
-            },
-            Err(_e) => return None,
-        };
+    let query = match sqlx::query(
+        "SELECT id,hashed_password FROM users WHERE lower(username) = lower(?) AND active=1",
+    )
+    .bind(username)
+    .fetch_optional(&pool)
+    .await
+    {
+        Ok(result) => match result {
+            Some(row) => row,
+            None => return None,
+        },
+        Err(_e) => return None,
+    };
 
     let hashed_password = query.try_get("hashed_password").unwrap();
     let user_id: i32 = query.try_get("id").unwrap();
