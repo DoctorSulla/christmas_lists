@@ -31,8 +31,8 @@ pub async fn create(pool: SqlitePool) {
         "CREATE TABLE IF NOT EXISTS presents(
             id INTEGER PRIMARY KEY AUTOINCREMENT, 
             user_id INTEGER,
-            name VARCHAR(50),
-            url VARCHAR(300), 
+            name VARCHAR(100),
+            url VARCHAR(500), 
             price VARCHAR (30),
             taken BOOLEAN,
             taken_by_id INTEGER
