@@ -1,65 +1,101 @@
 <!doctype html>
 <html>
+    <head>
+        <title>Halliday Christmas Lists</title>
 
-<head>
-  <title>Halliday Christmas Lists</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <link rel="stylesheet" href="./main.css" />
 
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="./main.css">
+        <script
+            src="https://unpkg.com/htmx.org@1.9.8"
+            integrity="sha384-rgjA7mptc2ETQqXoYC3/zJvkU7K/aP44Y+z7xQuJiVnB/422P/Ak+F/AqFR7E4Wr"
+            crossorigin="anonymous"
+        ></script>
+        <script
+            src="https://kit.fontawesome.com/c5aa4fd88b.js"
+            crossorigin="anonymous"
+        ></script>
 
-  <script src="https://unpkg.com/htmx.org@1.9.8"
-    integrity="sha384-rgjA7mptc2ETQqXoYC3/zJvkU7K/aP44Y+z7xQuJiVnB/422P/Ak+F/AqFR7E4Wr"
-    crossorigin="anonymous"></script>
-  <script src="https://kit.fontawesome.com/c5aa4fd88b.js" crossorigin="anonymous"></script>
+        <script>
+            document.addEventListener("showAddForm", function () {
+                document.getElementById("add-form-container").style.display =
+                    "block";
+            });
 
-  <script>
-    document.addEventListener("showAddForm", function () {
-      document.getElementById("add-form-container").style.display = "block";
-    })
+            document.addEventListener("hideAddForm", function () {
+                document.getElementById("add-form-container").style.display =
+                    "none";
+            });
 
-    document.addEventListener("hideAddForm", function () {
-      document.getElementById("add-form-container").style.display = "none";
-    })
+            document.addEventListener("noPresents", function () {
+                document.getElementById("list-table").style.display = "none";
+                if (document.querySelector("no-presents") != null) {
+                    document.querySelector("no-presents").style.display =
+                        "block";
+                }
+            });
 
-    document.addEventListener("noPresents", function () {
-      document.getElementById("list-table").style.display = "none";
-      if (document.querySelector("no-presents") != null) {
-        document.querySelector("no-presents").style.display = "block";
-      }
-    })
+            document.addEventListener("somePresents", function () {
+                document.getElementById("list-table").style.display = "table";
+                if (document.querySelector("no-presents") != null) {
+                    document.querySelector("no-presents").style.display =
+                        "none";
+                }
+            });
+            document.addEventListener("DOMContentLoaded", function () {
+                document
+                    .querySelector("#add-form")
+                    .addEventListener("htmx:afterRequest", function (e) {
+                        if (e.detail.successful) {
+                            this.reset();
+                            document.querySelector(
+                                ".no-presents",
+                            ).style.display = "none";
+                        }
+                    });
+            });
+        </script>
+        <script src="./snowflakes.js"></script>
+    </head>
 
-    document.addEventListener("somePresents", function () {
-      document.getElementById("list-table").style.display = "table";
-      if (document.querySelector("no-presents") != null) {
-        document.querySelector("no-presents").style.display = "none";
-      }
-    })
+    <body>
+        <div id="container">
+            <h1>Halliday's Christmas Lists</h1>
+            <p>Choose whose list you wish to view:</p>
+            <div hx-get="./users" hx-trigger="load"></div>
+            <br />
 
-  </script>
-  <script src="./snowflakes.js"></script>
-</head>
+            <div hx-trigger="load" hx-get="./items/" id="items"></div>
+            <div id="add-form-container">
+                <h3>
+                    Add a new item
+                    <i class="fa-kit fa-sharp-solid-gift-circle-plus"></i>
+                </h3>
 
-<body>
-  <div id="container">
-    <h1>Halliday's Christmas Lists</h1>
-    <p>Choose whose list you wish to view:</p>
-    <div hx-get="./users" hx-trigger="load">
-    </div>
-    <br>
-
-    <div hx-trigger="load" hx-get="./items/" id="items">
-    </div>
-    <div id="add-form-container">
-      <h3>Add a new item <i class="fa-kit fa-sharp-solid-gift-circle-plus"></i></h3>
-
-      <form id='add-form' hx-post="./item" hx-target="#list-table tbody" hx-swap="beforeend">
-        <input type="text" name="name" placeholder="Name" required />
-        <input type="url" name="url" placeholder="URL" required />
-        <input type="number" name="price" placeholder="Price" step=".01" value="00.00" required />
-        <button type="submit">Add Item</button>
-      </form>
-    </div>
-  </div>
-</body>
-
+                <form
+                    id="add-form"
+                    hx-post="./item"
+                    hx-target="#list-table tbody"
+                    hx-swap="beforeend"
+                >
+                    <input
+                        type="text"
+                        name="name"
+                        placeholder="Name"
+                        required
+                    />
+                    <input type="url" name="url" placeholder="URL" required />
+                    <input
+                        type="number"
+                        name="price"
+                        placeholder="Price"
+                        step=".01"
+                        value="00.00"
+                        required
+                    />
+                    <button type="submit">Add Item</button>
+                </form>
+            </div>
+        </div>
+    </body>
 </html>

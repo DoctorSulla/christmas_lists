@@ -141,7 +141,7 @@ pub async fn add_item(
 
     let created_id: i32 = new_row.try_get("id").unwrap();
 
-    (response_headers,Html(format!("<tr><td><a href='{}'>{}</a></td><td>{}</td><td style='text'align:center'><i class='fa-regular fa-x'></i></td><td><a href='#' hx-delete='./item/{}' hx-target='closest tr' hx-swap='outerHTML' hx-confirm='Please confirm you wish to delete {} from your list'><i class=\"fa-duotone fa-trash-can\"></i></a></td></tr>\n",
+    (response_headers,Html(format!("<tr><td><a href='{}'>{}</a></td><td>{}</td><td style='text-align:center'><i class='fa-regular fa-x'></i></td><td><a href='#' hx-delete='./item/{}' hx-target='closest tr' hx-swap='outerHTML' hx-confirm='Please confirm you wish to delete {} from your list'><i class=\"fa-duotone fa-trash-can\"></i></a></td></tr>\n",
                 form_data.url, form_data.name, utilities::format_currency(form_data.price),created_id,form_data.name)))
 }
 
@@ -174,20 +174,20 @@ pub async fn get_items(
         None => user_id,
     };
     let mut presents = sqlx::query_as::<_, Present>(
-        "SELECT 
+        "SELECT
             p.id,
             p.name,
             p.url,
             p.price,
             p.taken,
             u.username
-        FROM 
-            presents p 
-        LEFT JOIN 
-            users u 
-        ON 
-            p.taken_by_id = u.id 
-        WHERE 
+        FROM
+            presents p
+        LEFT JOIN
+            users u
+        ON
+            p.taken_by_id = u.id
+        WHERE
             user_id=?",
     )
     .bind(requested_user_id)
