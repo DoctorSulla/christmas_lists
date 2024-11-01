@@ -11,6 +11,8 @@ pub fn get_protected_routes() -> Router<AppState> {
         .route("/items/", get(route_handlers::get_items))
         .route("/password", patch(route_handlers::update_password))
         .route("/users", get(route_handlers::get_users))
+        .route("/logout", get(route_handlers::logout))
+        .route("/loginStatus", get(route_handlers::login_status))
 }
 
 pub fn get_open_routes() -> Router<AppState> {

@@ -322,3 +322,20 @@ pub async fn update_password(
     let _existing_password = request.current_password;
     (StatusCode::OK, Html("".to_string()))
 }
+
+pub async fn logout(State(_state): State<AppState>) -> (StatusCode, HeaderMap) {
+    let mut headers = HeaderMap::new();
+
+    headers.insert(
+        "Set-Cookie",
+        "auth_token=logout; Max-Age=0; HttpOnly".parse().unwrap(),
+    );
+
+    headers.insert("Location", "/index.html".parse().unwrap());
+
+    (StatusCode::TEMPORARY_REDIRECT, headers)
+}
+
+pub async fn login_status() -> StatusCode {
+    StatusCode::NO_CONTENT
+}

@@ -61,6 +61,22 @@
     <body>
         <div id="container">
             <h1>Halliday's Christmas Lists</h1>
+            <div style="text-align: right; margin: 10px 0">
+                <a
+                    href="/logout"
+                    style="
+                        text-decoration: none;
+                        background-color: #c41e3a;
+                        color: white;
+                        padding: 8px 15px;
+                        border-radius: 5px;
+                        font-weight: bold;
+                        text-transform: uppercase;
+                        font-size: 14px;
+                    "
+                    >Logout</a
+                >
+            </div>
             <p>Choose whose list you wish to view:</p>
             <div hx-get="./users" hx-trigger="load"></div>
             <br />
