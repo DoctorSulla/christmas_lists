@@ -77,6 +77,8 @@ html,
       background-color: #ddd;
     }
 
+    svg { height:15px; width:15px }
+
     svg.fa-trash-can {
       color:black
     }
