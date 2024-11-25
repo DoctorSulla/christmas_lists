@@ -5,12 +5,13 @@
     <title>Halliday Christmas Lists</title>
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="stylesheet" href="./main.css?version=2" />
+    <link rel="stylesheet" href="./main.css?version=3" />
 
     <script src="https://unpkg.com/htmx.org@1.9.8"
         integrity="sha384-rgjA7mptc2ETQqXoYC3/zJvkU7K/aP44Y+z7xQuJiVnB/422P/Ak+F/AqFR7E4Wr"
         crossorigin="anonymous"></script>
-    <script src="https://kit.fontawesome.com/c5aa4fd88b.js" crossorigin="anonymous"></script>
+    <link href="/fontawesome/css/fontawesome.css" rel="stylesheet" />
+    <link href="/fontawesome/css/all.css" rel="stylesheet" />
 
     <script>
         document.addEventListener("showAddForm", function () {
@@ -77,7 +78,7 @@
         <div id="add-form-container">
             <h3>
                 Add a new item
-                <i class="fa-kit fa-sharp-solid-gift-circle-plus"></i>
+                <i class="fa-duotone fa-solid fa-gift"></i>
             </h3>
 
             <form id="add-form" hx-post="./item" hx-target="#list-table tbody" hx-swap="beforeend">

@@ -8,7 +8,7 @@ const verticalSpeed = 8;
 const horizontalAdjustmentRange = 2;
 
 deleteSnowflakes = function () {
-  const snowflakes = document.querySelectorAll("svg.fa-snowflake");
+  const snowflakes = document.querySelectorAll(".fa-snowflake");
   for (const snowflake of snowflakes) {
     snowflake.remove();
   }
@@ -50,7 +50,6 @@ function generateSnowflake(pageLoad = false) {
   const snowflake = document.createElement("i");
   snowflake.classList.add("fa-snowflake");
   snowflake.classList.add("fa-thin");
-  snowflake.classList.add("fa-sharp");
   snowflake.style.height = generateRange(10, 30) + "px";
   snowflake.style.width = generateRange(10, 30) + "px";
   snowflake.style.position = "absolute";
@@ -64,7 +63,7 @@ function generateSnowflake(pageLoad = false) {
 
 animate = function (timestamp) {
   const flakes = document.querySelectorAll(
-    'svg.fa-snowflake[data-falling="false"]',
+    '.fa-snowflake[data-falling="false"]',
   );
   for (const flake of flakes) {
     if (flake.dataset.startTime == undefined) {

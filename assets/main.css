@@ -77,19 +77,17 @@ html,
       background-color: #ddd;
     }
 
-    svg { height:15px; width:15px }
-
-    svg.fa-trash-can {
+    i.fa-trash-can {
       color:black
     }
 
-    svg.fa-trash-can:hover { color:red }
+    i.fa-trash-can:hover { color:red }
 
-    svg.fa-sharp-solid-gift-circle-plus {
+    i.fa-gift {
       color:black
     }
 
-    svg.fa-sharp-solid-gift-circle-plus:hover {
+    i.fa-gift:hover {
       color:green
     }
 
