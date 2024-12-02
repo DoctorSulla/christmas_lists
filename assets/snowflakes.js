@@ -37,7 +37,9 @@ function generateInitialPosition(pageLoad = false) {
       (Math.random() * window.innerHeight) / 6,
     );
   }
-  let initialHorizontalOffset = Math.floor(Math.random() * window.innerWidth);
+  let initialHorizontalOffset = Math.floor(
+    Math.random() * (window.innerWidth - 30),
+  );
   if (initialHorizontalOffset < 30) {
     initialHorizontalOffset = 30;
   }
