@@ -34,12 +34,14 @@ function generateInitialPosition(pageLoad = false) {
     initialVerticalOffset = Math.floor(Math.random() * window.innerHeight);
   } else {
     initialVerticalOffset = Math.floor(
-      Math.random() * window.innerHeight / 6,
+      (Math.random() * window.innerHeight) / 6,
     );
   }
-  const initialHorizontalOffset = Math.floor(
-    Math.random() * window.innerWidth,
-  );
+  let initialHorizontalOffset = Math.floor(Math.random() * window.innerWidth);
+  if (initialHorizontalOffset < 30) {
+    initialHorizontalOffset = 30;
+  }
+
   return {
     top: initialVerticalOffset + "px",
     left: initialHorizontalOffset + "px",
@@ -74,10 +76,11 @@ animate = function (timestamp) {
       flake.dataset.starty = parseInt(flake.style.top, 10);
     }
     // Vertical movement
-    flake.style.top = parseInt(flake.dataset.starty, 10) +
+    flake.style.top =
+      parseInt(flake.dataset.starty, 10) +
       Math.floor((timestamp - flake.dataset.startTime) / verticalSpeed) +
       "px";
-    if (parseInt(flake.style.top, 10) > window.innerHeight) {
+    if (parseInt(flake.style.top, 10) > window.innerHeight - 50) {
       flake.remove();
       generateSnowflake();
     }
@@ -88,11 +91,11 @@ animate = function (timestamp) {
       );
       const flip = Math.floor(Math.random() * 2);
       if (flip == 0) {
-        flake.style.left = parseInt(flake.style.left) + horizontalAdjustment +
-          "px";
+        flake.style.left =
+          parseInt(flake.style.left) + horizontalAdjustment + "px";
       } else {
-        flake.style.left = parseInt(flake.style.left) - horizontalAdjustment +
-          "px";
+        flake.style.left =
+          parseInt(flake.style.left) - horizontalAdjustment + "px";
       }
     }
   }
