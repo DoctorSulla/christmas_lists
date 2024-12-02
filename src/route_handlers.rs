@@ -222,7 +222,7 @@ pub async fn get_items(
             let buying_it_text: String = if row.taken {
                 "".to_string()
             } else {
-                "<i class='fa-sharp fa-solid fa-cart-plus'></i>".to_string()
+                "<i class='fa-duotone fa-solid fa-cart-plus'></i>".to_string()
             };
             res = format!(
                 "{}<tr><td><a href='{}'>{}</a></td><td>{}</td><td style='text-align:center'>{}</td><td class='taken-by'>{}</td><td><a hx-patch='./item/{}' hx-confirm='Please confirm you are buying or have bought {}' hx-target='closest tr' href='#'>{}</a></td></tr>\n",
