@@ -301,7 +301,7 @@ pub async fn allocate_item(
     let price: String = result.try_get("price").unwrap();
 
     Html(format!(
-        "<td><a href='{}'>{}</a></td><td>{}</td><td><i class='fa-regular fa-check'></i></td><td>{}</td><td></td>",
+        "<td><a href='{}'>{}</a></td><td>{}</td><td style='text-align:center'><i class='fa-regular fa-check'></i></td><td>{}</td><td></td>",
         url, name, price, user.username
     ))
 }
